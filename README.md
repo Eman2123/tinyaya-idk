@@ -2,7 +2,7 @@
 
 Teaching TinyAya to say "I don't know" in languages with no labelled QA data.
 
-Lexsi AI Safety and Alignment Hackathon project (deadline: end of 14 Nov 2026, re-verify on the hackathon page).
+Lexsi AI Safety and Alignment Hackathon project (deadline: 15 Nov 2026, 11:59 PM AoE (about 16 Nov, 4:59 PM PKT); re-verify on the hackathon page).
 
 ## Idea
 
