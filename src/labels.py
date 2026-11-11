@@ -2,7 +2,8 @@
 
 Usage: python src/labels.py --lang en
 Writes outputs/labels/<lang>.jsonl with fields:
-  gold_known (bool), cons_known (bool), majority (str), agree (int)
+  gold_known (bool), cons_known (bool), majority (str), agree (int), majority_correct (bool)
+Prints counts plus precision of the consistency 'known' label against gold.
 """
 import argparse
 from collections import Counter
@@ -43,9 +44,19 @@ def main():
             "majority_correct": is_match(maj, r["answers"]),
         })
     write_jsonl(out_path(cfg, "labels", f"{args.lang}.jsonl"), out)
+
+    n = len(out)
     k = sum(o["gold_known"] for o in out)
     c = sum(o["cons_known"] for o in out)
-    print(f"{args.lang}: n={len(out)} gold_known={k} cons_known={c}")
+    both = sum(o["gold_known"] and o["cons_known"] for o in out)
+    maj_ok = sum(o["majority_correct"] for o in out if o["cons_known"])
+    splits = Counter(o["split"] for o in out)
+    print(f"{args.lang}: n={n} gold_known={k} ({k/n:.1%}) cons_known={c} ({c/n:.1%}) splits={dict(splits)}")
+    if c:
+        print(f"   cons_known precision vs gold(greedy)={both/c:.1%}  "
+              f"vs gold(majority)={maj_ok/c:.1%}  recall of gold_known={both/max(k,1):.1%}")
+    agree_hist = Counter(o["agree"] for o in out)
+    print("   agree histogram:", {a: agree_hist[a] for a in sorted(agree_hist)})
 
 
 if __name__ == "__main__":
