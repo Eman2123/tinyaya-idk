@@ -3,7 +3,7 @@ model:
   name: "CohereLabs/tiny-aya-global"
   dtype: "float16"
   load_in_4bit: false
-  max_new_tokens: 32
+  max_new_tokens: 16
 
 sampling:
   n_samples: 5
@@ -51,7 +51,16 @@ refusals:
   tr: "Bilmiyorum."
   sw: "Sijui."
 
-prompt_template: "Question: {question}\nAnswer briefly.\nAnswer:"
+prompt_template: "Question: {question}\nAnswer:"
+
+# Few-shot prefix per language (short answers, none of these are MKQA test questions).
+# Without it the base model answers in long sentences and keeps generating new questions,
+# which breaks consistency labels. Used identically for sampling, training and evaluation.
+few_shot:
+  en: "Question: What is the capital of Japan?\nAnswer: Tokyo\n\nQuestion: In which year did World War II end?\nAnswer: 1945\n\nQuestion: Who painted the Mona Lisa?\nAnswer: Leonardo da Vinci\n\n"
+  es: "Question: ¿Cuál es la capital de Japón?\nAnswer: Tokio\n\nQuestion: ¿En qué año terminó la Segunda Guerra Mundial?\nAnswer: 1945\n\nQuestion: ¿Quién pintó la Mona Lisa?\nAnswer: Leonardo da Vinci\n\n"
+  ar: "Question: ما هي عاصمة اليابان؟\nAnswer: طوكيو\n\nQuestion: في أي عام انتهت الحرب العالمية الثانية؟\nAnswer: 1945\n\nQuestion: من رسم الموناليزا؟\nAnswer: ليوناردو دا فينشي\n\n"
+  ms: "Question: Apakah ibu negara Jepun?\nAnswer: Tokyo\n\nQuestion: Pada tahun berapakah Perang Dunia Kedua tamat?\nAnswer: 1945\n\nQuestion: Siapakah yang melukis Mona Lisa?\nAnswer: Leonardo da Vinci\n\n"
 
 paths:
   raw: data/raw

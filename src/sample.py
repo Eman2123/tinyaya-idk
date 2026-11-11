@@ -42,7 +42,8 @@ def generate(tok, model, prompts, max_new, sample, temperature=0.7, n=1):
     out = model.generate(**enc, **kw)
     gen = out[:, enc["input_ids"].shape[1]:]
     texts = tok.batch_decode(gen, skip_special_tokens=True)
-    return [t.strip() for t in texts]
+    # keep only the first line: the base model likes to continue with "Question: ..." etc.
+    return [t.strip().split("\n")[0].strip() for t in texts]
 
 
 @torch.no_grad()
@@ -75,7 +76,7 @@ def main():
     results, hidden = [], [[] for _ in layers]
     for i in tqdm(range(0, len(rows), bs), desc=f"sampling {args.lang}"):
         batch = rows[i : i + bs]
-        prompts = [build_prompt(cfg, r["question"]) for r in batch]
+        prompts = [build_prompt(cfg, r["question"], args.lang) for r in batch]
         greedy = generate(tok, model, prompts, max_new, sample=False)
         samp = generate(tok, model, prompts, max_new, sample=True,
                         temperature=sc["temperature"], n=n)

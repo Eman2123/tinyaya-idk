@@ -39,7 +39,7 @@ def main():
         preds = []
         for i in tqdm(range(0, len(test), bs), desc=f"eval {lang}"):
             batch = test[i : i + bs]
-            preds += generate(tok, model, [build_prompt(cfg, r["question"]) for r in batch],
+            preds += generate(tok, model, [build_prompt(cfg, r["question"], lang) for r in batch],
                               max_new, sample=False)
 
         # base model correctness on the same test questions (for over-refusal)

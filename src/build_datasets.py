@@ -25,10 +25,10 @@ def make_examples(cfg, lang, labels, known_key, seed=0):
         if is_known:
             # use the model's own majority answer; skip if it is empty
             if r["majority"].strip():
-                known.append({"prompt": build_prompt(cfg, r["question"]),
+                known.append({"prompt": build_prompt(cfg, r["question"], lang),
                               "completion": r["majority"].strip(), "known": True, "id": r["id"]})
         else:
-            unknown.append({"prompt": build_prompt(cfg, r["question"]),
+            unknown.append({"prompt": build_prompt(cfg, r["question"], lang),
                             "completion": refusal, "known": False, "id": r["id"]})
     share = cfg["training"]["known_share"]
     # n_known / (n_known + n_unknown) = share, using as many examples as possible
@@ -49,10 +49,10 @@ def trap_examples(cfg, lang, labels):
         return None
     traps = read_jsonl(path)
     refusal = cfg["refusals"][lang]
-    ex = [{"prompt": build_prompt(cfg, t["question"]), "completion": refusal, "known": False}
+    ex = [{"prompt": build_prompt(cfg, t["question"], lang), "completion": refusal, "known": False}
           for t in traps]
     # answerable side: questions with a gold answer, target = gold answer (the usual shortcut)
-    ans = [{"prompt": build_prompt(cfg, r["question"]), "completion": r["answers"][0], "known": True}
+    ans = [{"prompt": build_prompt(cfg, r["question"], lang), "completion": r["answers"][0], "known": True}
            for r in labels if r["split"] == "build"][: len(ex)]
     out = ex + ans
     random.Random(0).shuffle(out)

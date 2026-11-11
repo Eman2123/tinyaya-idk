@@ -83,8 +83,11 @@ def load_questions(cfg, lang):
     return rows
 
 
-def build_prompt(cfg, question):
-    return cfg["prompt_template"].format(question=question)
+def build_prompt(cfg, question, lang=None):
+    """Few-shot prefix (per language, short-answer style) + the question.
+    Used by sampling, training data and evaluation, so all stages see the same prompt."""
+    prefix = (cfg.get("few_shot") or {}).get(lang, "")
+    return prefix + cfg["prompt_template"].format(question=question)
 
 
 def is_refusal(text, cfg, lang):
