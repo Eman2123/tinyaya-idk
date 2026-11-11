@@ -1,0 +1,57 @@
+model:
+  # TODO: set the exact TinyAya Hugging Face ID from the Cohere Labs page
+  name: "CohereLabs/REPLACE_WITH_TINYAYA_ID"
+  dtype: "bfloat16"
+  load_in_4bit: false
+  max_new_tokens: 32
+
+sampling:
+  n_samples: 5
+  temperature: 0.7
+  seed: 42
+  probe_layers: [-12, -1]   # a middle-ish and a late layer (negative = from the end)
+  batch_size: 16
+
+languages:
+  anchor: en
+  targets: [es, ar, id, sw]   # confirm TinyAya support and QA availability
+
+splits:
+  build: 1000
+  val: 250
+  test: 250
+
+labels:
+  consistency_min_agree: 4    # of 5 samples
+
+probe:
+  layer_index: 0              # index into sampling.probe_layers
+  C: 1.0
+
+training:
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+  epochs: 2
+  lr: 1.0e-4
+  batch_size: 8
+  grad_accum: 2
+  max_seq_len: 256
+  known_share: 0.5            # fraction of known (answer) examples in the training set
+  seeds: [1, 2, 3]
+
+# Refusal templates: MUST be checked by a native speaker before use
+refusals:
+  en: "I don't know."
+  es: "No lo sé."
+  ar: "لا أعرف."
+  id: "Saya tidak tahu."
+  sw: "Sijui."
+
+prompt_template: "Question: {question}\nAnswer briefly.\nAnswer:"
+
+paths:
+  raw: data/raw
+  processed: data/processed
+  outputs: outputs
