@@ -31,6 +31,8 @@ def type_name(t):
 def gold_for(item, lang):
     """Return list of acceptable answer strings for this language, or None."""
     answers = item["answers"].get(lang) or []
+    if len(answers) != 1:  # multi-answer / list questions are not clean factoids
+        return None
     golds = []
     for a in answers:
         if type_name(a.get("type")) not in KEEP_TYPES:
