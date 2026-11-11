@@ -16,6 +16,16 @@ from datasets import load_dataset
 from common import ROOT, load_config, write_jsonl
 
 KEEP_TYPES = {"entity", "number", "date", "number_with_unit", "short_phrase"}
+# In the parquet conversion `type` is a ClassLabel stored as an int, in this order:
+TYPE_NAMES = ["entity", "long_answer", "unanswerable", "date", "number",
+              "number_with_unit", "short_phrase", "binary"]
+
+
+def type_name(t):
+    """Accept either the string name (script version) or the int ClassLabel id (parquet)."""
+    if isinstance(t, int) and 0 <= t < len(TYPE_NAMES):
+        return TYPE_NAMES[t]
+    return t
 
 
 def gold_for(item, lang):
@@ -23,7 +33,7 @@ def gold_for(item, lang):
     answers = item["answers"].get(lang) or []
     golds = []
     for a in answers:
-        if a.get("type") not in KEEP_TYPES:
+        if type_name(a.get("type")) not in KEEP_TYPES:
             return None
         if a.get("text"):
             golds.append(str(a["text"]))
