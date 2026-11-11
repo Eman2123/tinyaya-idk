@@ -52,13 +52,33 @@ Edit `configs/config.yaml`: set `model.name` to the exact TinyAya Hugging Face I
 
 If `split` is missing, `src/common.py` assigns 1000/250/250 deterministically by id hash.
 
+## Notebooks
+
+`notebooks/colab.ipynb` and `notebooks/kaggle.ipynb` run the whole pipeline on free GPUs (clone repo, set model ID, smoke test,
+sampling, labels, training, evaluation, tables). Both skip steps whose outputs already exist, so you can resume after a disconnect.
+Set your Hugging Face token as a secret (`HF_TOKEN`) and accept the TinyAya licence first.
+
+## Scripts
+
+| Script | Purpose |
+|---|---|
+| `src/prepare_data.py` | Build `data/raw/<lang>.jsonl` from MKQA (no id/sw there; ms works) |
+| `src/judge.py` | Optional LLM answer-equivalence judge + 50-item hand-check file |
+| `src/generate_traps.py` | Teacher-written trap questions for R1 |
+| `src/sanity_checks.py` | Safety refusal rate and general-capability check |
+| `src/stats.py` | Seed summary, paired bootstrap, transfer matrix |
+| `scripts/run_all.sh` | End-to-end run for one language group |
+| `tests/test_pipeline.py` | CPU-only synthetic tests (`python tests/test_pipeline.py`) |
+
+Not implemented: DPO stretch experiment, CuratorKIT/AuditKIT wiring (check the hackathon rules first).
+
 ## Quick start
 
 ```bash
 python src/sample.py --lang en --limit 10        # tiny end-to-end test
 python src/labels.py --lang en
-python src/probe.py --anchor en --targets ar id sw
-python src/build_datasets.py --langs en ar id sw
+python src/probe.py --anchor en --targets es ar ms
+python src/build_datasets.py --langs en es ar ms
 python src/train_sft.py --recipe R3 --langs en ar
 python src/evaluate.py --recipe R3 --langs en ar
 ```

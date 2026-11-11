@@ -14,7 +14,7 @@ sampling:
 
 languages:
   anchor: en
-  targets: [es, ar, id, sw]   # confirm TinyAya support and QA availability
+  targets: [es, ar, ms]   # confirm TinyAya support; MKQA has ms but no id/sw
 
 splits:
   build: 1000
@@ -47,6 +47,8 @@ refusals:
   es: "No lo sé."
   ar: "لا أعرف."
   id: "Saya tidak tahu."
+  ms: "Saya tidak tahu."
+  tr: "Bilmiyorum."
   sw: "Sijui."
 
 prompt_template: "Question: {question}\nAnswer briefly.\nAnswer:"

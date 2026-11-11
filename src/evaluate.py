@@ -54,9 +54,9 @@ def main():
             ref = is_refusal(p, cfg, lang)
             recs.append({"id": r["id"], "pred": p, "refused": ref,
                          "correct": (not ref) and is_match(p, r["answers"])})
-        if args.name == "R0":
-            from common import write_jsonl
-            write_jsonl(base_path, recs)
+        # save per-question predictions for every model (used by stats.py bootstrap)
+        from common import write_jsonl
+        write_jsonl(out_path(cfg, "results", f"preds_{args.name}_{lang}.jsonl"), recs)
 
         n = len(recs)
         answered = [x for x in recs if not x["refused"]]
