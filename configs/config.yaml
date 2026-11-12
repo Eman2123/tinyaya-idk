@@ -37,7 +37,7 @@ training:
   lr: 1.0e-4
   batch_size: 8
   grad_accum: 2
-  max_seq_len: 256
+  max_seq_len: 384
   known_share: 0.5            # fraction of known (answer) examples in the training set
   seeds: [1, 2, 3]
 

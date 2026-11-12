@@ -23,10 +23,12 @@ def make_examples(cfg, lang, labels, known_key, seed=0):
             continue
         is_known = r[known_key]
         if is_known:
-            # use the model's own majority answer; skip if it is empty
-            if r["majority"].strip():
+            # R2 (gold): the label already means "greedy answer matched gold", so use that answer.
+            # R3/R4 have no gold: use the model's own majority answer (this is where label noise enters).
+            ans = r["greedy"] if known_key == "gold_known" else r["majority"]
+            if ans.strip():
                 known.append({"prompt": build_prompt(cfg, r["question"], lang),
-                              "completion": r["majority"].strip(), "known": True, "id": r["id"]})
+                              "completion": ans.strip(), "known": True, "id": r["id"]})
         else:
             unknown.append({"prompt": build_prompt(cfg, r["question"], lang),
                             "completion": refusal, "known": False, "id": r["id"]})
@@ -62,6 +64,7 @@ def trap_examples(cfg, lang, labels):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--langs", nargs="+", required=True)
+    ap.add_argument("--show", type=int, default=0, help="print N known + N unknown examples per recipe")
     ap.add_argument("--config", default=None)
     args = ap.parse_args()
 
@@ -76,6 +79,11 @@ def main():
             ex = make_examples(cfg, lang, labels, key)
             write_jsonl(ROOT / cfg["paths"]["processed"] / rec / f"{lang}.jsonl", ex)
             print(f"{rec}/{lang}: {len(ex)} examples, known={sum(e['known'] for e in ex)}")
+            if args.show:
+                for flag in (True, False):
+                    for e in [e for e in ex if e["known"] == flag][: args.show]:
+                        q = e["prompt"].rsplit("Question:", 1)[-1].split("\nAnswer:")[0].strip()
+                        print(f"   {'K' if flag else 'U'} | {q[:70]} -> {e['completion'][:40]}")
         r1 = trap_examples(cfg, lang, labels)
         if r1:
             write_jsonl(ROOT / cfg["paths"]["processed"] / "R1" / f"{lang}.jsonl", r1)
