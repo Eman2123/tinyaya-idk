@@ -45,17 +45,38 @@ def normalize(text):
     text = unicodedata.normalize("NFKC", str(text)).lower().strip()
     # keep only the first line: models sometimes continue after the answer
     text = text.split("\n")[0]
+    text = re.sub(r"(?<=\d)\.0+(?!\d)", "", text)  # "18.0" -> "18"
     text = "".join(ch for ch in text if ch not in set(string.punctuation) and not unicodedata.category(ch).startswith("P"))
     text = re.sub(r"\b(a|an|the)\b", " ", text)
     return re.sub(r"\s+", " ", text).strip()
 
 
+_ISO_DATE = re.compile(r"^\s*(\d{4})-\d{2}(-\d{2})?\s*$")
+_NUM_UNIT = re.compile(r"^\s*(-?\d+(?:\.\d+)?)\s+\S.*$")
+
+
+def gold_variants(golds):
+    """Extra acceptable forms of the gold answers (year-granularity matching for dates,
+    bare number for 'number + unit' golds). Documented as a limitation in the write-up."""
+    out = list(golds)
+    for g in golds:
+        g = str(g)
+        m = _ISO_DATE.match(g)
+        if m:
+            out.append(m.group(1))            # 2003-06-21 -> 2003
+        m = _NUM_UNIT.match(g)
+        if m:
+            out.append(m.group(1))            # "12.0 oz" -> 12.0 (normalize strips .0)
+    return out
+
+
 def is_match(pred, golds):
-    """Normalized exact match, or gold contained as a whole phrase in the prediction."""
+    """Normalized exact match, or gold contained as a whole phrase in the prediction.
+    Dates match at year granularity; 'number + unit' golds also match the bare number."""
     p = normalize(pred)
     if not p:
         return False
-    for g in golds:
+    for g in gold_variants(golds):
         g = normalize(g)
         if not g:
             continue
