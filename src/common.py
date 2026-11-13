@@ -111,7 +111,13 @@ def build_prompt(cfg, question, lang=None):
     return prefix + cfg["prompt_template"].format(question=question)
 
 
-def is_refusal(text, cfg, lang):
-    """True if the generated text starts with the language's refusal template."""
-    ref = normalize(cfg["refusals"][lang])
-    return normalize(text).startswith(ref) if ref else False
+def is_refusal(text, cfg, lang, native_only=False):
+    """True if the generated text starts with a refusal template.
+
+    By default ANY language's template counts: a model that says "I don't know." to a Spanish question
+    has abstained, whatever language it used, and this is what a cross-lingual transfer matrix must
+    measure. native_only=True accepts only the question language's own template (language fidelity).
+    """
+    refs = [cfg["refusals"][lang]] if native_only else list(cfg["refusals"].values())
+    t = normalize(text)
+    return any(t.startswith(normalize(r)) for r in refs if normalize(r))

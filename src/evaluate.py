@@ -53,6 +53,7 @@ def main():
         for r, p in zip(test, preds):
             ref = is_refusal(p, cfg, lang)
             recs.append({"id": r["id"], "pred": p, "refused": ref,
+                         "refused_native": is_refusal(p, cfg, lang, native_only=True),
                          "correct": (not ref) and is_match(p, r["answers"])})
         # save per-question predictions for every model (used by stats.py bootstrap)
         from common import write_jsonl
@@ -66,6 +67,8 @@ def main():
             "coverage": len(answered) / n,
             "selective_acc": (correct / len(answered)) if answered else float("nan"),
             "hallucination_rate": (len(answered) - correct) / n,
+            # share of refusals written in the question's own language (language fidelity)
+            "native_refusal_share": (sum(x["refused_native"] for x in recs) / max(1, n - len(answered))),
         }
         if base_correct is not None:
             # unknown = base model got it wrong
