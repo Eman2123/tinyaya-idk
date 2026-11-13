@@ -53,9 +53,13 @@ def trap_examples(cfg, lang, labels):
     refusal = cfg["refusals"][lang]
     ex = [{"prompt": build_prompt(cfg, t["question"], lang), "completion": refusal, "known": False}
           for t in traps]
-    # answerable side: questions with a gold answer, target = gold answer (the usual shortcut)
-    ans = [{"prompt": build_prompt(cfg, r["question"], lang), "completion": r["answers"][0], "known": True}
-           for r in labels if r["split"] == "build"][: len(ex)]
+    # answerable side: build questions the model answers correctly (matches gold), target = its own short
+    # answer. Same targets as the known half of R2, so R1 vs R2 differs only in the refusal side
+    # (teacher-invented traps vs real unknown questions). Raw gold strings (e.g. '2003-06-21') are not
+    # used as targets: their format differs from the few-shot style and breaks year-level matching.
+    ans = [{"prompt": build_prompt(cfg, r["question"], lang), "completion": r["greedy"].strip(),
+            "known": True, "id": r["id"]}
+           for r in labels if r["split"] == "build" and r["gold_known"] and r["greedy"].strip()][: len(ex)]
     out = ex + ans
     random.Random(0).shuffle(out)
     return out
