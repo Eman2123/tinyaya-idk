@@ -4,7 +4,7 @@ Usage (AI/ML API, OpenAI-compatible; the default):
   pip install openai
   export AIML_API_KEY=...            # on Kaggle: put it in Secrets as AIML_API_KEY and copy it into os.environ
   python src/generate_traps.py --lang es --n 500
-  python src/generate_traps.py --lang es --n 500 --model anthropic/claude-sonnet-5   # model id exactly as listed by AI/ML API
+  python src/generate_traps.py --lang es --n 500 --model anthropic/claude-haiku-5.5   # model id exactly as listed by AI/ML API
 
 Anthropic API directly instead:
   pip install anthropic ; export ANTHROPIC_API_KEY=...
@@ -72,7 +72,7 @@ def main():
     ap.add_argument("--lang", required=True)
     ap.add_argument("--n", type=int, default=500)
     ap.add_argument("--provider", choices=["aiml", "anthropic"], default="aiml")
-    ap.add_argument("--model", default="anthropic/claude-sonnet-5",
+    ap.add_argument("--model", default="anthropic/claude-haiku-5.5",
                     help="aiml: id exactly as in the AI/ML API model list; anthropic: e.g. claude-sonnet-5-5")
     ap.add_argument("--base-url", default="https://api.aimlapi.com/v1", dest="base_url")
     ap.add_argument("--api-key-env", default="AIML_API_KEY", dest="api_key_env")
