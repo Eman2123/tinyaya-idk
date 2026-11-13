@@ -61,10 +61,28 @@ def trap_examples(cfg, lang, labels):
     return out
 
 
+def equalize(sets, seed=0):
+    """Give every recipe the same number of known and unknown examples (k = the smallest class count over
+    recipes), so recipe comparisons are not confounded by training-set size."""
+    k = min(min(sum(e["known"] for e in ex), sum(not e["known"] for e in ex)) for ex in sets.values())
+    rng = random.Random(seed)
+    out = {}
+    for rec, ex in sets.items():
+        kn = [e for e in ex if e["known"]]
+        un = [e for e in ex if not e["known"]]
+        rng.shuffle(kn)
+        rng.shuffle(un)
+        mixed = kn[:k] + un[:k]
+        rng.shuffle(mixed)
+        out[rec] = mixed
+    return out, k
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--langs", nargs="+", required=True)
     ap.add_argument("--show", type=int, default=0, help="print N known + N unknown examples per recipe")
+    ap.add_argument("--no_equalize", action="store_true", help="keep each recipe's natural size")
     ap.add_argument("--config", default=None)
     args = ap.parse_args()
 
@@ -72,11 +90,20 @@ def main():
     recipes = {"R2": "gold_known", "R3": "cons_known", "R4": "probe_known"}
     for lang in args.langs:
         labels = read_jsonl(ROOT / cfg["paths"]["outputs"] / "labels" / f"{lang}.jsonl")
+        sets = {}
         for rec, key in recipes.items():
             if key not in labels[0]:
                 print(f"[{rec}] {key} missing for {lang}, run probe.py first")
                 continue
-            ex = make_examples(cfg, lang, labels, key)
+            sets[rec] = make_examples(cfg, lang, labels, key)
+        r1 = trap_examples(cfg, lang, labels)
+        if r1:
+            sets["R1"] = r1
+        if not args.no_equalize and sets:
+            natural = {r: len(e) for r, e in sets.items()}
+            sets, k = equalize(sets)
+            print(f"{lang}: equalized to {k} known + {k} unknown per recipe (natural sizes {natural})")
+        for rec, ex in sets.items():
             write_jsonl(ROOT / cfg["paths"]["processed"] / rec / f"{lang}.jsonl", ex)
             print(f"{rec}/{lang}: {len(ex)} examples, known={sum(e['known'] for e in ex)}")
             if args.show:
@@ -84,10 +111,6 @@ def main():
                     for e in [e for e in ex if e["known"] == flag][: args.show]:
                         q = e["prompt"].rsplit("Question:", 1)[-1].split("\nAnswer:")[0].strip()
                         print(f"   {'K' if flag else 'U'} | {q[:70]} -> {e['completion'][:40]}")
-        r1 = trap_examples(cfg, lang, labels)
-        if r1:
-            write_jsonl(ROOT / cfg["paths"]["processed"] / "R1" / f"{lang}.jsonl", r1)
-            print(f"R1/{lang}: {len(r1)} examples")
 
 
 if __name__ == "__main__":
