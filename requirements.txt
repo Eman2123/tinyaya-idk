@@ -12,3 +12,5 @@ pyyaml
 tqdm
 vllm  # optional, faster sampling
 openai  # only for generate_traps.py (teacher via AI/ML API)
+auditkit
+curatorkit
