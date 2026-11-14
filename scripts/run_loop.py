@@ -8,12 +8,16 @@ ALL = ["en", "es", "ar", "ms"]
 
 def run(cmd):
     print("$", cmd, flush=True)
-    return subprocess.run(cmd, shell=True, cwd=ROOT).returncode
+    env = dict(os.environ)
+    if a.gpu is not None:
+        env["CUDA_VISIBLE_DEVICES"] = a.gpu
+    return subprocess.run(cmd, shell=True, cwd=ROOT, env=env).returncode
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--seeds", nargs="+", type=int, default=[1])
 ap.add_argument("--recipes", nargs="+", default=["R2", "R3", "R4", "R1"])
 ap.add_argument("--langs", nargs="+", default=ALL)
+ap.add_argument("--gpu", default=None, help="CUDA_VISIBLE_DEVICES for the subprocesses, e.g. 1")
 ap.add_argument("--eval-langs", default="all", help="all | same+en | 'en es'")
 a = ap.parse_args()
 

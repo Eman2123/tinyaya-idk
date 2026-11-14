@@ -34,14 +34,30 @@ def load_model(cfg):
 @torch.no_grad()
 def generate(tok, model, prompts, max_new, sample, temperature=0.7, n=1):
     enc = tok(prompts, return_tensors="pt", padding=True).to(model.device)
-    kw = dict(max_new_tokens=max_new, pad_token_id=tok.pad_token_id)
+    # stop (and cut) at the EOS token that train_sft.py appends to every completion; without this the
+    # model keeps generating after its answer and skip_special_tokens hides the EOS, gluing text together
+    eos = {tok.eos_token_id}
+    try:
+        ge = model.generation_config.eos_token_id
+        eos |= set(ge if isinstance(ge, (list, tuple)) else [ge])
+    except Exception:
+        pass
+    eos = sorted(e for e in eos if e is not None)
+    kw = dict(max_new_tokens=max_new, pad_token_id=tok.pad_token_id, eos_token_id=eos)
     if sample:
         kw.update(do_sample=True, temperature=temperature, num_return_sequences=n)
     else:
         kw.update(do_sample=False)
     out = model.generate(**enc, **kw)
-    gen = out[:, enc["input_ids"].shape[1]:]
-    texts = tok.batch_decode(gen, skip_special_tokens=True)
+    gen = out[:, enc["input_ids"].shape[1]:].tolist()
+    cut = []
+    for row in gen:
+        for j, t in enumerate(row):
+            if t in eos:
+                row = row[:j]
+                break
+        cut.append(row)
+    texts = tok.batch_decode(cut, skip_special_tokens=True)
     # keep only the first line: the base model likes to continue with "Question: ..." etc.
     return [t.strip().split("\n")[0].strip() for t in texts]
 
