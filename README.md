@@ -445,7 +445,7 @@ No model produced actionable harmful content (the non-refusals are deflections s
 - **Retries** used micro-batch 4 with gradient accumulation instead of batch 8.
 - **Safety check** is 8 English prompts only.
 - **Not implemented:** DPO stretch experiment, AlignTune, cost (ROI) table.
-- **Published adapters** are seed 1 only; tables use all 3 seeds.
+- **Published adapters:** the main adapters repo has seed 1 only; all 60 adapters (seeds 1 to 3), hidden states and result files are in [EmanMirza2025/tinyaya-idk-outputs](https://huggingface.co/datasets/EmanMirza2025/tinyaya-idk-outputs). Tables use all 3 seeds.
 - **Licence:** adapters inherit the non-commercial licence (cc-by-nc-4.0) of `tiny-aya-global`.
 
 ---
@@ -574,6 +574,7 @@ Use the few-shot prompt from `configs/config.yaml` (prompt template `Question: {
 | Code | this repository | MIT |
 | LoRA adapters (seed 1, R1 to R5, en / es / ar / ms) | [EmanMirza2025/tinyaya-idk-adapters](https://huggingface.co/EmanMirza2025/tinyaya-idk-adapters) | cc-by-nc-4.0 (inherited from the base model) |
 | Questions, model answers, labels per source, SFT sets, evaluation CSVs, CuratorKIT manifests | [EmanMirza2025/tinyaya-idk-data](https://huggingface.co/datasets/EmanMirza2025/tinyaya-idk-data) | cc-by-sa-3.0 (derived from MKQA) |
+| Full outputs (all seeds, hidden states, labels, results) | [EmanMirza2025/tinyaya-idk-outputs](https://huggingface.co/datasets/EmanMirza2025/tinyaya-idk-outputs) | cc-by-sa-3.0 data; adapters inherit cc-by-nc-4.0 |
 | Base model | [CohereLabs/tiny-aya-global](https://huggingface.co/CohereLabs/tiny-aya-global) | cc-by-nc-4.0 |
 
 Models and teacher: core model is `CohereLabs/tiny-aya-global`; Claude Haiku (via AI/ML API) was used only as the teacher that wrote R1 trap questions.
