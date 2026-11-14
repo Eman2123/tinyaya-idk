@@ -1,7 +1,7 @@
 """Resumable train + eval loop.
 Example: python scripts/run_loop.py --seeds 2 3 --recipes R2 R3 R4 --eval-langs same+en
 """
-import argparse, os, subprocess, time
+import argparse, os, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ALL = ["en", "es", "ar", "ms"]
@@ -18,6 +18,7 @@ ap.add_argument("--seeds", nargs="+", type=int, default=[1])
 ap.add_argument("--recipes", nargs="+", default=["R2", "R3", "R4", "R1"])
 ap.add_argument("--langs", nargs="+", default=ALL)
 ap.add_argument("--gpu", default=None, help="CUDA_VISIBLE_DEVICES for the subprocesses, e.g. 1")
+ap.add_argument("--sync-user", default=None, help="HF username: sync each finished run to the HF dataset repo")
 ap.add_argument("--eval-langs", default="all", help="all | same+en | 'en es'")
 a = ap.parse_args()
 
@@ -43,4 +44,11 @@ for seed in a.seeds:
             if run(f"python src/evaluate.py --name {name} --adapter outputs/adapters/{name} --langs {' '.join(ev)}"):
                 print("EVAL FAILED", name, flush=True)
                 continue
+            if a.sync_user:
+                try:
+                    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                    from sync_hf import sync
+                    sync(a.sync_user, [name])
+                except Exception as e:  # never let a sync problem kill the loop
+                    print("SYNC FAILED", name, repr(e)[:200], flush=True)
             print(f">>> {name}: train {(t1-t0)/60:.1f} min, eval {(time.time()-t1)/60:.1f} min", flush=True)
