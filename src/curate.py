@@ -8,7 +8,8 @@ Input is converted to {"instruction": <question>, "response": <completion>, "id"
 data/curated_in/, run through curatorkit.Curator (no LLM calls), then the surviving rows are joined back to
 the original records by id/question and written to data/curated/<R>/<lang>.jsonl plus a report line
 (kept/dropped per stage) in outputs/results/curate_report.jsonl. Training can then use the curated sets.
-Short answers ("1998") are legitimate, so min_tokens is 1 and the schema gate is off.
+Short answers ("1998") are legitimate, so min_tokens is 1 and the schema gate is off. clean=False: CuratorKIT's text
+cleaning must not rewrite Arabic/Malay/Spanish text (we join survivors back to the originals by exact text).
 """
 import argparse
 import json
@@ -43,7 +44,7 @@ def main():
             write_jsonl(inp, [{"instruction": question_of(r["prompt"]), "response": r["completion"],
                                "idx": i} for i, r in enumerate(rows)])
             conf = ck.CuratorConfig(
-                dataset=str(inp), format="jsonl", min_tokens=1, schema_gate=False, clean=True,
+                dataset=str(inp), format="jsonl", min_tokens=1, schema_gate=False, clean=False,
                 dedup=args.dedup, minhash_threshold=0.9,
                 output_dir=str(ROOT / "data" / "curated_out" / rec / lang), name=f"{rec}_{lang}",
                 export_formats=["jsonl"], write_hf_readme=False,
@@ -62,6 +63,9 @@ def main():
                 data = d.get("data", d)
                 keep_keys.add((str(data.get("instruction", "")).strip(), str(data.get("response", "")).strip()))
             kept = [r for r in rows if (question_of(r["prompt"]), r["completion"].strip()) in keep_keys]
+            matched = sum((question_of(r["prompt"]), r["completion"].strip()) in keep_keys for r in rows)
+            if keep_keys and matched < len(keep_keys):
+                print(f"!! {rec}/{lang}: {len(keep_keys) - matched} survivors did not match an original row (text rewritten?)")
             if not keep_keys:  # unknown result shape: do not silently drop everything
                 print(f"!! {rec}/{lang}: could not read survivors from result, run --inspect; keeping all")
                 kept = rows
