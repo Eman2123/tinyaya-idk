@@ -9,6 +9,7 @@ ALL = ["en", "es", "ar", "ms"]
 def run(cmd):
     print("$", cmd, flush=True)
     env = dict(os.environ)
+    env.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
     if a.gpu is not None:
         env["CUDA_VISIBLE_DEVICES"] = a.gpu
     return subprocess.run(cmd, shell=True, cwd=ROOT, env=env).returncode
@@ -19,6 +20,7 @@ ap.add_argument("--recipes", nargs="+", default=["R2", "R3", "R4", "R1"])
 ap.add_argument("--langs", nargs="+", default=ALL)
 ap.add_argument("--gpu", default=None, help="CUDA_VISIBLE_DEVICES for the subprocesses, e.g. 1")
 ap.add_argument("--sync-user", default=None, help="HF username: sync each finished run to the HF dataset repo")
+ap.add_argument("--bs", type=int, default=0, help="train micro-batch (effective batch kept by grad_accum); use 4 if training OOMs")
 ap.add_argument("--eval-langs", default="all", help="all | same+en | 'en es'")
 a = ap.parse_args()
 
@@ -31,7 +33,7 @@ for seed in a.seeds:
                 continue
             t0 = time.time()
             if not os.path.isdir(f"{ROOT}/outputs/adapters/{name}"):
-                if run(f"python src/train_sft.py --recipe {rec} --langs {lang} --seed {seed}"):
+                if run(f"python src/train_sft.py --recipe {rec} --langs {lang} --seed {seed}" + (f" --bs {a.bs}" if a.bs else "")):
                     print("TRAIN FAILED", name, flush=True)
                     continue
             t1 = time.time()
