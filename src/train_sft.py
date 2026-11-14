@@ -38,7 +38,7 @@ def collate(tok, max_len):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--recipe", required=True, choices=["R1", "R2", "R3", "R4"])
+    ap.add_argument("--recipe", required=True, choices=["R1", "R2", "R3", "R4", "R5"])
     ap.add_argument("--langs", nargs="+", required=True)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--limit", type=int, default=0, help="use only N examples (quick timing/pipeline test)")
