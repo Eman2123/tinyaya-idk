@@ -161,7 +161,7 @@ sequenceDiagram
 
 | Toolkit | Where | What it does here | Evidence |
 |---|---|---|---|
-| **CuratorKIT** | `src/curate.py` | Validates (Alpaca schema), deduplicates and packages every SFT set (R1 to R5, 4 languages, 20 sets) with manifest, provenance, checksums and dataset card | `data/curated_out/<recipe>/<lang>/` (manifest.json, lexsi_provenance.json, checksums.txt, dataset_card.md, rejected.jsonl). It kept every sample and rejected none |
+| **CuratorKIT** | `src/curate.py` | Validates (Alpaca schema), deduplicates and packages every SFT set (R1 to R5, 4 languages, 20 sets) with manifest, provenance, checksums and dataset card | `data/curated_out/<recipe>/<lang>/` in the Hub dataset repo (manifest.json, lexsi_provenance.json, checksums.txt, dataset_card.md, rejected.jsonl). It kept every sample and rejected none |
 | **AuditKIT** | `src/audit_eval.py` | Re-evaluates an adapter on the held-out test set with custom scorers (`correct`, `refused`, `hallucinated`, with explicit directions) through `ak.evaluate` | On R4_es_s1 it reproduces `evaluate.py` exactly: correct 0.119, refused 0.694, hallucinated 0.187 (`outputs/results/audit_R4_es_s1.json`) |
 | AlignTune | not used | It pins `transformers` / `trl` versions that clash with our training environment. Training uses `peft` + `trl` directly | n/a |
 
@@ -222,7 +222,7 @@ For every question: one greedy answer and 5 samples at temperature 0.7 (`max_new
 
 ### 6.4 Fine-tuning
 
-LoRA on `q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj`: rank 16, alpha 32, dropout 0.05, 2 epochs, learning rate 1e-4, effective batch 16, max sequence length 256, fp16 on a T4. One adapter per recipe, language and seed (`R{k}_{lang}_s{seed}`), 60 adapters in total.
+LoRA on `q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj`: rank 16, alpha 32, dropout 0.05, 2 epochs, learning rate 1e-4, effective batch 16, max sequence length 384, fp16 on a T4. One adapter per recipe, language and seed (`R{k}_{lang}_s{seed}`), 60 adapters in total.
 
 ### 6.5 Metrics
 
@@ -398,7 +398,7 @@ Hallucination, seed 1. Rows are the **training** language, columns the **test** 
 
 </details>
 
-Reading: a model tuned in English lowers hallucination in Spanish (0.80 to 0.48) and Malay (0.85 to 0.48), and Spanish or Malay models lower it in English (about 0.47 to 0.49). Between es, ar and ms the transfer is weak (0.65 to 0.82), and nothing helps much on Arabic test questions. So abstention is **partly language-agnostic through English**, and the hypothesis "transfer is strong between related languages" is only half supported. This matrix uses one seed.
+Reading: a model tuned in English lowers hallucination in Spanish (0.83 to 0.48) and Malay (0.85 to 0.48), and Spanish or Malay models lower it in English (about 0.47 to 0.52, base 0.80). Between es, ar and ms the transfer is mostly weak (0.65 to 0.85; the one exception is R2 trained on Arabic and tested on Spanish, 0.54), and nothing helps much on Arabic test questions. So abstention is **partly language-agnostic through English**, and the hypothesis "transfer is strong between related languages" is only half supported. This matrix uses one seed.
 
 ---
 
@@ -519,7 +519,7 @@ python src/sample.py --lang ms
 ```bash
 python src/labels.py --lang en      # also es, ar, ms
 python src/probe.py --anchor en --targets es ar ms --sweep                 # choose layer and C
-python src/probe.py --anchor en --targets es ar ms --layer_index 0 --C 0.001
+python src/probe.py --anchor en --targets es ar ms --layer_index 0     # C = 0.001 is set in configs/config.yaml
 ```
 
 **4. Training sets**
@@ -532,8 +532,8 @@ python src/curate.py --recipes R1 R2 R3 R4 R5 --langs en es ar ms
 
 **5. Train and evaluate** (resumable; one training process per GPU; `--bs 4` avoids out-of-memory on a T4 and keeps the effective batch at 16)
 ```bash
-python scripts/run_loop.py --seeds 1 2 3 --langs en es ar ms --recipes R2 R3 R4 --eval-langs same+en --bs 4 --gpu 0
-python scripts/run_loop.py --seeds 1 2 3 --recipes R1 R5 --eval-langs same+en --bs 4 --gpu 1
+python scripts/run_loop.py --seeds 1 --recipes R1 R2 R3 R4 R5 --eval-langs all --bs 4 --gpu 0      # seed 1: every adapter on all 4 languages (transfer matrix)
+python scripts/run_loop.py --seeds 2 3 --recipes R1 R2 R3 R4 R5 --eval-langs same+en --bs 4 --gpu 1  # seeds 2, 3: own language + English
 ```
 Add `--sync-user <hf_user>` to push every finished run to a private Hub repo.
 
