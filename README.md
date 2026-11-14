@@ -468,6 +468,7 @@ tinyaya-idk/
 │   ├── evaluate.py            # coverage, selective acc, hallucination, over-refusal
 │   ├── audit_eval.py          # AuditKIT pass over the same predictions
 │   ├── sanity_checks.py       # safety refusal + capability check
+│   ├── app.py                 # Gradio demo: base vs tuned adapter, side by side
 │   ├── stats.py               # seed summary, paired bootstrap, transfer matrix
 │   ├── judge.py               # optional LLM answer-equivalence judge
 │   └── common.py              # config, matching, normalisation, prompts, IO
@@ -564,6 +565,12 @@ base = AutoModelForCausalLM.from_pretrained("CohereLabs/tiny-aya-global", torch_
 model = PeftModel.from_pretrained(base, "EmanMirza2025/tinyaya-idk-adapters", subfolder="R4_es_s1")
 ```
 Use the few-shot prompt from `configs/config.yaml` (prompt template `Question: {question}\nAnswer:` with the language-specific prefix); all results were measured with it.
+
+**Side-by-side demo** (base model vs an adapter on the same question; needs a GPU with about 8 GB free, for example a Kaggle or Colab T4)
+```bash
+pip install gradio
+python src/app.py --share      # --share gives a temporary public link
+```
 
 ---
 
