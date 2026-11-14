@@ -21,6 +21,7 @@ Recipes compared:
 | R2 | gold labels | upper bound |
 | R3 | consistency labels | cheap method A |
 | R4 | transferred-probe labels | cheap method B |
+| R5 | probe AND consistency agree (ablation) | label-rule ablation, same size as R4 |
 
 ## Pipeline
 
@@ -70,7 +71,12 @@ Set your Hugging Face token as a secret (`HF_TOKEN`) and accept the TinyAya lice
 | `scripts/run_all.sh` | End-to-end run for one language group |
 | `tests/test_pipeline.py` | CPU-only synthetic tests (`python tests/test_pipeline.py`) |
 
-Not implemented: DPO stretch experiment, CuratorKIT/AuditKIT wiring (check the hackathon rules first).
+| `src/audit_eval.py` | AuditKIT pass (`ak.evaluate`) over the same test predictions; cross-check of `evaluate.py` |
+| `src/curate.py` | CuratorKIT pass (dedup) over the SFT training sets |
+| `scripts/run_loop.py` | Resumable train+eval loop over seeds/recipes/languages (`--sync-user` pushes each finished run to the Hub) |
+| `scripts/sync_hf.py`, `scripts/restore_hf.py`, `scripts/hf_push.py` | Hub sync, restore after a Kaggle reset, final public push |
+
+Not implemented: DPO stretch experiment, AlignTune (pins transformers/trl versions that clash with the training environment).
 
 ## Quick start
 
@@ -86,5 +92,5 @@ python src/evaluate.py --recipe R3 --langs en ar
 ## Notes
 
 - Answer matching is normalized exact match. For non-Latin scripts use the optional judge (see `src/common.py`) and hand-check 50 items per language.
-- Check hackathon rules for the required toolkits (CuratorKIT, AuditKIT) and wire them in where the rules ask.
+- Generation stops at the EOS token that `train_sft.py` appends to every target (`src/sample.py: generate`). Evaluations made before this fix (14 Nov 2026) are invalid and were re-run.
 - Refusal templates in `configs/config.yaml` must be checked by a native speaker.

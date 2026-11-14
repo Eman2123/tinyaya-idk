@@ -82,15 +82,43 @@ def equalize(sets, seed=0):
     return out, k
 
 
+def build_combined(cfg, langs):
+    """Ablation R5: a question counts as known only if the probe AND the consistency check both say so.
+    Same size and class balance as the existing R4 set (so R5 vs R4 differs only in the label rule)."""
+    for lang in langs:
+        labels = read_jsonl(ROOT / cfg["paths"]["outputs"] / "labels" / f"{lang}.jsonl")
+        if "probe_known" not in labels[0]:
+            print(f"[R5] probe_known missing for {lang}, run probe.py first")
+            continue
+        for r in labels:
+            r["combined_known"] = bool(r["probe_known"]) and bool(r["cons_known"])
+        ex = make_examples(cfg, lang, labels, "combined_known")
+        kn = [e for e in ex if e["known"]]
+        un = [e for e in ex if not e["known"]]
+        ref = ROOT / cfg["paths"]["processed"] / "R4" / f"{lang}.jsonl"
+        k = sum(e["known"] for e in read_jsonl(ref)) if ref.exists() else len(kn)
+        k = min(k, len(kn), len(un))
+        out = kn[:k] + un[:k]
+        random.Random(0).shuffle(out)
+        write_jsonl(ROOT / cfg["paths"]["processed"] / "R5" / f"{lang}.jsonl", out)
+        print(f"R5/{lang}: {len(out)} examples ({k} known + {k} unknown); combined-known pool={len(kn)}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--langs", nargs="+", required=True)
     ap.add_argument("--show", type=int, default=0, help="print N known + N unknown examples per recipe")
+    ap.add_argument("--combined", action="store_true",
+                    help="build ONLY R5 (known = probe_known AND cons_known), sized to match the existing R4 set; "
+                         "does not touch R1-R4")
     ap.add_argument("--no_equalize", action="store_true", help="keep each recipe's natural size")
     ap.add_argument("--config", default=None)
     args = ap.parse_args()
 
     cfg = load_config(args.config)
+    if args.combined:
+        build_combined(cfg, args.langs)
+        return
     recipes = {"R2": "gold_known", "R3": "cons_known", "R4": "probe_known"}
     for lang in args.langs:
         labels = read_jsonl(ROOT / cfg["paths"]["outputs"] / "labels" / f"{lang}.jsonl")
