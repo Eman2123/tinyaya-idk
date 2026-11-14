@@ -4,7 +4,7 @@ Usage:
   python src/curate.py --recipes R1 R2 R3 R4 --langs en es ar ms
   python src/curate.py --recipes R1 --langs es --inspect     # prints what CuratorKIT returns, writes nothing
 
-Input is converted to {"instruction": <question>, "response": <completion>, "id", "known"} files under
+Input is converted to Alpaca rows {"instruction": <question>, "input": "", "output": <completion>} files under
 data/curated_in/, run through curatorkit.Curator (no LLM calls), then the surviving rows are joined back to
 the original records by id/question and written to data/curated/<R>/<lang>.jsonl plus a report line
 (kept/dropped per stage) in outputs/results/curate_report.jsonl. Training can then use the curated sets.
@@ -41,34 +41,36 @@ def main():
                 continue
             rows = read_jsonl(src)
             inp = ROOT / "data" / "curated_in" / rec / f"{lang}.jsonl"
-            write_jsonl(inp, [{"instruction": question_of(r["prompt"]), "response": r["completion"],
-                               "idx": i} for i, r in enumerate(rows)])
+            write_jsonl(inp, [{"instruction": question_of(r["prompt"]), "input": "", "output": r["completion"]}
+                              for r in rows])  # Alpaca schema: the only one CuratorKIT detects
             conf = ck.CuratorConfig(
-                dataset=str(inp), format="jsonl", min_tokens=1, schema_gate=False, clean=False,
+                dataset=str(inp), format="auto", min_tokens=1, schema_gate=False, clean=False,
                 dedup=args.dedup, minhash_threshold=0.9,
                 output_dir=str(ROOT / "data" / "curated_out" / rec / lang), name=f"{rec}_{lang}",
                 export_formats=["jsonl"], write_hf_readme=False,
             )
             res = ck.Curator(conf).run()
+            passed = list(getattr(res, "passed", None) or [])
+            rej = list(getattr(res, "rejected", None) or [])
             if args.inspect:
-                print(rec, lang, type(res), [a for a in dir(res) if not a.startswith("_")])
-                print(res)
+                from collections import Counter
+                print(rec, lang, "in", len(rows), "passed", len(passed), "rejected", len(rej))
+                print("rejection reasons:", Counter(getattr(r, "rejection_reason", "?") for r in rej).most_common(6))
+                if passed:
+                    print("passed[0]:", {k: getattr(passed[0], k, None) for k in ("instruction", "input", "output")})
                 continue
-            kept_items = getattr(res, "samples", None) or getattr(res, "accepted", None) or []
-            rej = getattr(res, "rejected", None) or []
             # join back by (question, completion): survivors keep their original prompt/known fields
             keep_keys = set()
-            for s in kept_items:
-                d = s if isinstance(s, dict) else getattr(s, "__dict__", {})
-                data = d.get("data", d)
-                keep_keys.add((str(data.get("instruction", "")).strip(), str(data.get("response", "")).strip()))
-            kept = [r for r in rows if (question_of(r["prompt"]), r["completion"].strip()) in keep_keys]
+            for s in passed:
+                keep_keys.add((str(getattr(s, "instruction", "")).strip(), str(getattr(s, "output", "")).strip()))
             matched = sum((question_of(r["prompt"]), r["completion"].strip()) in keep_keys for r in rows)
             if keep_keys and matched < len(keep_keys):
                 print(f"!! {rec}/{lang}: {len(keep_keys) - matched} survivors did not match an original row (text rewritten?)")
-            if not keep_keys:  # unknown result shape: do not silently drop everything
-                print(f"!! {rec}/{lang}: could not read survivors from result, run --inspect; keeping all")
+            if not keep_keys:  # nothing survived / unknown shape: do not silently drop everything
+                print(f"!! {rec}/{lang}: no survivors read (reasons: see --inspect); keeping all")
                 kept = rows
+            else:
+                kept = [r for r in rows if (question_of(r["prompt"]), r["completion"].strip()) in keep_keys]
             out = ROOT / "data" / "curated" / rec / f"{lang}.jsonl"
             write_jsonl(out, kept)
             line = {"recipe": rec, "lang": lang, "in": len(rows), "kept": len(kept),
