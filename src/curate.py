@@ -25,7 +25,7 @@ def question_of(prompt):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--recipes", nargs="+", default=["R1", "R2", "R3", "R4"])
+    ap.add_argument("--recipes", nargs="+", default=["R1", "R2", "R3", "R4", "R5"])
     ap.add_argument("--langs", nargs="+", default=["en", "es", "ar", "ms"])
     ap.add_argument("--dedup", default="minhash", choices=["exact", "minhash"])
     ap.add_argument("--inspect", action="store_true")
@@ -47,7 +47,7 @@ def main():
                 dataset=str(inp), format="auto", min_tokens=1, schema_gate=False, clean=False,
                 dedup=args.dedup, minhash_threshold=0.9,
                 output_dir=str(ROOT / "data" / "curated_out" / rec / lang), name=f"{rec}_{lang}",
-                export_formats=["jsonl"], write_hf_readme=False,
+                write_hf_readme=False,
             )
             res = ck.Curator(conf).run()
             passed = list(getattr(res, "passed", None) or [])
