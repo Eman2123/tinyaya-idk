@@ -39,6 +39,11 @@ def main():
         def model_fn(prompts, _lang=lang):
             # AuditKIT hands us the Sample inputs; they are already full few-shot prompts
             out = []
+            # AuditKIT's default GenerationAdapter must hand us the exact few-shot prompt, otherwise the numbers
+            # would not match evaluate.py
+            bad = [p for p in prompts if p not in gold_by_input]
+            if bad:
+                raise RuntimeError(f"AuditKIT altered {len(bad)} prompts, e.g. {bad[0][-120:]!r}")
             for i in range(0, len(prompts), bs):
                 out += generate(tok, model, prompts[i : i + bs], max_new, sample=False)
             return out
@@ -58,6 +63,7 @@ def main():
             return float((not is_refusal(output, cfg, lang)) and not is_match(output, sample.metadata["gold"]))
 
         res = ak.evaluate(samples, model_fn, scorers=[correct, refused, hallucinated], cache=False)
+        print(lang, [a for a in dir(res) if not a.startswith("_")])
         print(lang, res)
         try:
             summary[lang] = json.loads(json.dumps(getattr(res, "summary", None) or res.__dict__, default=str))
