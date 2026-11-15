@@ -76,7 +76,10 @@ h1{font-size:clamp(38px,6.4vw,76px);line-height:1.02;margin:34px 0 18px;font-wei
 /* ---------- sections ---------- */
 section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:30px 30px 26px;margin:0 0 22px;box-shadow:var(--shadow)}
 h2.t{font-size:clamp(24px,3.2vw,32px);line-height:1.12;margin:0 0 10px;font-weight:800;letter-spacing:-.02em;max-width:26ch}
+section{position:relative}
+section::before{content:"";position:absolute;left:30px;top:0;width:54px;height:4px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,var(--correct) 0 40%,var(--wrong) 40% 70%,var(--abstain) 70%)}
 .sub{color:var(--muted);margin:0 0 20px;max-width:64ch}
+h2.t{padding-top:6px}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
 .tabs button{font-size:14px;padding:7px 14px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:8px;cursor:pointer;min-height:38px;transition:background .2s}
 .tabs button:hover{background:var(--hl)}
@@ -113,8 +116,20 @@ table.hm td.diag{outline:2px solid var(--ink);outline-offset:-2px;font-weight:80
 .scale i{display:block;width:160px;height:10px;border-radius:5px}
 ul.lim{margin:0;padding-left:20px;max-width:74ch}
 ul.lim li{margin:0 0 8px}
-footer{padding:4px 0 56px;color:var(--muted);font-size:14px;font-family:"Bricolage Grotesque",system-ui,sans-serif}
-footer code{font-size:13px}
+.foot{background:var(--hero);color:var(--hero-ink);margin-top:36px;padding:48px 0 28px;font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.fgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px 40px}
+.foot h4{margin:0 0 12px;font-size:13px;font-weight:700;color:var(--hero-muted);letter-spacing:.01em}
+.foot ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:15px}
+.foot a{text-decoration:none;color:var(--hero-ink);border-bottom:1px solid var(--hero-line)}
+.foot a:hover,.foot a:focus-visible{border-bottom-color:var(--h-correct);color:#fff}
+.foot a:focus-visible{outline:3px solid var(--h-correct);outline-offset:3px}
+.fbrand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.01em;margin:0 0 12px}
+.fbrand img{width:32px;height:32px;border-radius:8px}
+.foot p{margin:0 0 10px;color:var(--hero-muted);font-size:15px;line-height:1.5;max-width:38ch}
+.fbar{display:flex;gap:4px;margin:0 0 14px}.fbar i{display:block;height:6px;border-radius:3px}
+.fbottom{margin-top:36px;padding-top:18px;border-top:1px solid var(--hero-line);display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;color:var(--hero-muted);font-size:13px}
+@media (max-width:860px){.fgrid{grid-template-columns:1fr 1fr}.fgrid>div:first-child{grid-column:1 / -1}}
+@media (max-width:520px){.fgrid{grid-template-columns:1fr}}
 @media (max-width:860px){
   .finds{grid-template-columns:1fr}.finds div+div{border-left:0;border-top:1px solid var(--line)}
   .pair{grid-template-columns:1fr;gap:24px}
@@ -175,7 +190,7 @@ footer code{font-size:13px}
   <p class="note">Over-refusal is the share of questions the base model answered correctly that the tuned model refused. Abstain recall is the share of questions the base model got wrong that the tuned model refused. Means over 3 seeds; the standard deviation is under hallucination.</p>
 </section>
 
-<section aria-labelledby="h-forest">
+<section id="gold-vs-probe" aria-labelledby="h-forest">
   <h2 class="t" id="h-forest">A probe is as good as gold labels in three of four languages</h2>
   <p class="sub">Paired bootstrap on the test questions, outcomes averaged over seeds. A filled dot means the 95% interval excludes zero. A hollow dot means we cannot tell the two recipes apart.</p>
   <div class="tabs" id="metricTabs" role="group" aria-label="Metric">
@@ -186,7 +201,7 @@ footer code{font-size:13px}
   <p class="callout">R4 matches R2 in English, Spanish and Malay. In Arabic R4 is more conservative: 0.040 less hallucination, but also 0.021 fewer correct answers. Against R1, R4 cuts hallucination by 0.32 to 0.52 in every language.</p>
 </section>
 
-<section aria-labelledby="h-tr">
+<section id="transfer" aria-labelledby="h-tr">
   <h2 class="t" id="h-tr">Abstention transfers across languages only partly</h2>
   <p class="sub">Rows are the language an adapter was trained on, columns the language it is tested on. The outlined diagonal is same-language. Seed 1 only.</p>
   <div class="tabs" id="trRec" role="group" aria-label="Recipe"></div>
@@ -199,7 +214,7 @@ footer code{font-size:13px}
   <p class="callout">English-trained adapters help most on Spanish and Malay, about 0.35 less hallucination than the base model. Arabic and the other pairs move much less. Base-model hallucination is 0.80 to 0.85 everywhere, so values near that mean no transfer.</p>
 </section>
 
-<section aria-labelledby="h-lq">
+<section id="labels" aria-labelledby="h-lq">
   <h2 class="t" id="h-lq">Probe labels rank known questions as well as consistency, or better</h2>
   <p class="sub">AUROC for telling known from unknown questions, with 95% intervals. The probe trains on English gold labels and is transferred; consistency needs at least 4 of 5 sampled answers to agree.</p>
   <div class="legend"><span><i style="background:var(--correct)"></i>Probe (R4)</span><span><i style="background:var(--abstain)"></i>Consistency (R3)</span></div>
@@ -207,7 +222,7 @@ footer code{font-size:13px}
   <p class="note">The intervals overlap in every language, so the fair reading is "comparable or better", not "clearly better". Precision of the known class is only 0.40 to 0.48 for both sources.</p>
 </section>
 
-<section aria-labelledby="h-lim">
+<section id="limits" aria-labelledby="h-lim">
   <h2 class="t" id="h-lim">What these numbers do not show</h2>
   <ul class="lim">
     <li>One QA source (MKQA, translated questions) and small training sets, 238 to 382 examples.</li>
@@ -219,8 +234,50 @@ footer code{font-size:13px}
     <li>Adapters inherit the non-commercial licence of the base model; the data follows MKQA (CC BY-SA 3.0).</li>
   </ul>
 </section>
-<footer>Numbers come from <code>outputs/results/tables.md</code>, generated by <code>scripts/make_tables.py</code> in the repository. Lexsi AI Safety and Alignment Hackathon, Track 1.</footer>
 </div>
+<footer class="foot">
+<div class="wrap">
+  <div class="fgrid">
+    <div>
+      <div class="fbrand"><img src="favicon.svg" alt="" width="32" height="32">TinyAya IDK</div>
+      <div class="fbar" aria-hidden="true"><i style="width:34px;background:var(--h-correct)"></i><i style="width:22px;background:var(--h-wrong)"></i><i style="width:48px;background:var(--h-abstain)"></i></div>
+      <p>Teaching TinyAya to say "I don't know" in languages with no labelled QA data. Lexsi AI Safety and Alignment Hackathon, Track 1: Fine-tuning and Data Curation.</p>
+      <p>Built by Eman Mirza with the Lexsi CuratorKIT and AuditKIT toolkits.</p>
+    </div>
+    <div>
+      <h4>Project</h4>
+      <ul>
+        <li><a href="https://github.com/Eman2123/tinyaya-idk">Code on GitHub</a></li>
+        <li><a href="https://github.com/Eman2123/tinyaya-idk#readme">Write-up and reproduction steps</a></li>
+        <li><a href="https://github.com/Eman2123/tinyaya-idk/blob/main/LICENSE">MIT licence</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Artifacts</h4>
+      <ul>
+        <li><a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79">Adapters collection</a></li>
+        <li><a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-data-6af954af02014765d70ba236">Data collection</a></li>
+        <li><a href="https://huggingface.co/CohereLabs/tiny-aya-global">Base model</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>On this page</h4>
+      <ul>
+        <li><a href="#s-bars">Every recipe</a></li>
+        <li><a href="#gold-vs-probe">Probe vs gold labels</a></li>
+        <li><a href="#transfer">Cross-language transfer</a></li>
+        <li><a href="#labels">Label quality</a></li>
+        <li><a href="#limits">Limits</a></li>
+        <li><a href="#top">Back to top</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="fbottom">
+    <span>Numbers: <code>outputs/results/tables.md</code>, made by <code>scripts/make_tables.py</code>.</span>
+    <span>Code MIT. Data CC BY-SA 3.0 (MKQA). Adapters CC BY-NC 4.0 (base model). Research results, not a safety guarantee.</span>
+  </div>
+</div>
+</footer>
 
 <script>
 const LANGS={en:"English",es:"Spanish",ar:"Arabic",ms:"Malay"};
