@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TinyAya IDK: results explorer</title>
+<meta name="description" content="Results of teaching TinyAya to say 'I don't know' without gold labels in the target language: 61 runs, 5 recipes, 4 languages.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F7; --panel:#FFFFFF; --ink:#16212C; --muted:#5B6B7A; --line:#D8DFE6;
+  --correct:#1E7D6F; --wrong:#C4423C; --abstain:#9AA7B4; --accent:#16212C; --hl:#E6F1EF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F161D; --panel:#17212B; --ink:#E7EDF2; --muted:#93A3B2; --line:#2A3743;
+    --correct:#3FB5A3; --wrong:#E2625B; --abstain:#5F7080; --accent:#E7EDF2; --hl:#1B2C2D;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F161D; --panel:#17212B; --ink:#E7EDF2; --muted:#93A3B2; --line:#2A3743;
+  --correct:#3FB5A3; --wrong:#E2625B; --abstain:#5F7080; --accent:#E7EDF2; --hl:#1B2C2D;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;font-variant-numeric:tabular-nums}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header{padding:40px 0 20px}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.08;margin:0 0 12px;font-weight:800;letter-spacing:-.02em;max-width:18ch}
+.lede{max-width:62ch;color:var(--muted);margin:0 0 16px;font-size:17px}
+.links{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:15px}
+.links a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--abstain)}
+.links a:hover,.links a:focus-visible{text-decoration-color:var(--ink)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:24px;margin:0 0 20px}
+h2{font-size:22px;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 18px;max-width:68ch;font-size:15px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+.tabs button{font:inherit;font-size:14px;padding:7px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;cursor:pointer;min-height:38px}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.tabs button:focus-visible,.links a:focus-visible,summary:focus-visible{outline:3px solid var(--correct);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;margin:0 0 14px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.rows{display:grid;gap:0}
+.row{display:grid;grid-template-columns:200px 1fr 78px 78px 78px;gap:6px 14px;align-items:center;padding:8px 8px;border-top:1px solid var(--line)}
+.row.head{border-top:0;font-size:13px;color:var(--muted);padding-bottom:4px}
+.row.head span{text-align:right}.row.head span:first-child,.row.head span:nth-child(2){text-align:left}
+.row.hl{background:var(--hl);border-radius:6px;border-top-color:transparent}
+.rn b{display:block;font-weight:700;font-size:15px;line-height:1.25}
+.rn small{color:var(--muted);font-size:13px;line-height:1.3;display:block}
+.bar{display:flex;height:26px;border-radius:4px;overflow:hidden;background:var(--line)}
+.bar div{height:100%;transition:width .45s cubic-bezier(.2,.7,.2,1)}
+.bar .c{background:var(--correct)}.bar .w{background:var(--wrong)}.bar .a{background:var(--abstain)}
+.num{text-align:right;font-size:15px}
+.num em{display:block;font-style:normal;color:var(--muted);font-size:12px}
+.callout{margin:16px 0 0;padding:12px 14px;border-left:3px solid var(--correct);background:var(--hl);border-radius:0 6px 6px 0;font-size:15px;max-width:78ch}
+.note{color:var(--muted);font-size:13px;margin:12px 0 0;max-width:78ch}
+svg{display:block;width:100%;height:auto}
+#forest,#lq{overflow-x:auto}
+#forest svg,#lq svg{min-width:640px}
+svg text{font-family:inherit;fill:var(--ink)}
+svg .mut{fill:var(--muted)}
+.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:560px}
+table.hm{border-collapse:separate;border-spacing:4px;width:100%;max-width:560px;font-size:15px}
+table.hm th{font-weight:500;color:var(--muted);font-size:13px;padding:2px 4px;text-align:center}
+table.hm th.rl{text-align:right;white-space:nowrap}
+table.hm td{height:52px;text-align:center;border-radius:5px;position:relative;color:var(--ink)}
+table.hm td.diag{outline:2px solid var(--ink);outline-offset:-2px;font-weight:700}
+.axis-t{font-size:13px;color:var(--muted);margin:6px 0 0}
+.lq{display:grid;gap:14px}
+.lqr{display:grid;grid-template-columns:70px 1fr;gap:8px 14px;align-items:center}
+.lqr b{font-size:15px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+ul.lim{margin:0;padding-left:20px;max-width:78ch;font-size:15px}
+ul.lim li{margin:0 0 6px}
+footer{padding:6px 0 48px;color:var(--muted);font-size:14px}
+@media (max-width:760px){
+  section{padding:16px}
+  .row{grid-template-columns:1fr 1fr 1fr;gap:6px 8px}
+  .row .rn{grid-column:1 / -1}
+  .row .bar{grid-column:1 / -1}
+  .row.head{display:none}
+  .num{text-align:left}
+  .two{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.bar div{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Teaching TinyAya to say "I don't know"</h1>
+  <p class="lede">Results from 61 runs of CohereLabs/tiny-aya-global: the base model plus five fine-tuning recipes in English, Spanish, Arabic and Malay. Test split, 252 MKQA questions per language. Recipes use 3 seeds; the base model is one deterministic run.</p>
+  <div class="links">
+    <a href="https://github.com/Eman2123/tinyaya-idk">Code and write-up on GitHub</a>
+    <a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79">Adapters on Hugging Face</a>
+    <a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-data-6af954af02014765d70ba236">Data and outputs on Hugging Face</a>
+  </div>
+</header>
+
+<section id="s-bars" aria-labelledby="h-bars">
+  <h2 id="h-bars">What happens to the same 252 questions</h2>
+  <p class="sub">Each bar is all test questions, split three ways. A good abstaining model turns red (wrong answers) into grey (abstained) without losing much green (correct).</p>
+  <div class="tabs" id="langTabs" role="group" aria-label="Language"></div>
+  <div class="legend"><span><i style="background:var(--correct)"></i>Answered correctly</span><span><i style="background:var(--wrong)"></i>Answered wrongly (hallucination)</span><span><i style="background:var(--abstain)"></i>Said "I don't know"</span></div>
+  <div class="rows" id="rows"></div>
+  <p class="callout" id="barNote"></p>
+  <p class="note">Over-refusal is the share of questions the base model answered correctly that the tuned model refused. Abstain recall is the share of questions the base model got wrong that the tuned model refused. Values are means over 3 seeds, with standard deviation under hallucination.</p>
+</section>
+
+<section aria-labelledby="h-forest">
+  <h2 id="h-forest">Is a probe as good as gold labels?</h2>
+  <p class="sub">Paired bootstrap on the test questions, outcomes averaged over seeds. A filled dot means the 95% interval excludes zero. A hollow dot means we cannot tell the two recipes apart.</p>
+  <div class="tabs" id="metricTabs" role="group" aria-label="Metric">
+    <button type="button" data-m="h" aria-pressed="true">Hallucination difference</button>
+    <button type="button" data-m="c" aria-pressed="false">Correct-answer difference</button>
+  </div>
+  <div id="forest"></div>
+  <p class="callout">R4 (probe labels, no gold labels in the target language) matches R2 (gold labels) in English, Spanish and Malay. In Arabic R4 is more conservative: 0.040 less hallucination, but also 0.021 fewer correct answers. Against R1 (teacher traps) R4 cuts hallucination by 0.32 to 0.52 in every language.</p>
+</section>
+
+<section aria-labelledby="h-tr">
+  <h2 id="h-tr">Does abstention carry over to another language?</h2>
+  <p class="sub">Rows are the language an adapter was trained on, columns the language it is tested on. The outlined diagonal is same-language. Seed 1 only.</p>
+  <div class="tabs" id="trRec" role="group" aria-label="Recipe"></div>
+  <div class="tabs" id="trMet" role="group" aria-label="Metric">
+    <button type="button" data-m="h" aria-pressed="true">Hallucination (lower is better)</button>
+    <button type="button" data-m="s" aria-pressed="false">Selective accuracy (higher is better)</button>
+  </div>
+  <div id="hm"></div>
+  <p class="callout">Transfer is partial. English-trained adapters help most on Spanish and Malay (about 0.35 less hallucination than the base model); Arabic and the non-English pairs move much less. Base-model hallucination is 0.80 to 0.85 everywhere, so anything near that is no transfer at all.</p>
+</section>
+
+<section aria-labelledby="h-lq">
+  <h2 id="h-lq">How good are the labels that train R3 and R4?</h2>
+  <p class="sub">AUROC for telling known from unknown questions, with 95% intervals. The probe is trained on English gold labels and transferred; consistency needs at least 4 of 5 sampled answers to agree.</p>
+  <div class="legend"><span><i style="background:var(--correct)"></i>Probe (R4)</span><span><i style="background:var(--abstain)"></i>Consistency (R3)</span></div>
+  <div class="lq" id="lq"></div>
+  <p class="note">The intervals overlap in every language, so the fair reading is "comparable or better", not "clearly better". Precision of the known class is only 0.40 to 0.48 for both sources.</p>
+</section>
+
+<section aria-labelledby="h-lim">
+  <h2 id="h-lim">What these numbers do not show</h2>
+  <ul class="lim">
+    <li>One QA source (MKQA, translated questions) and small training sets, 238 to 382 examples.</li>
+    <li>The probe trains on English gold labels, so the method is gold-free only in the target languages.</li>
+    <li>Over-refusal is high: R4 refuses 19 to 38 percent of questions the base model answered correctly (19 to 49 percent across R2 to R5).</li>
+    <li>Refusal templates and few-shot prompts in Spanish, Arabic and Malay were not checked by native speakers.</li>
+    <li>The transfer matrix is one seed, and the published adapters are seed 1 only.</li>
+    <li>The safety check uses 8 English prompts and found no actionable harmful answers. It is not a safety evaluation.</li>
+    <li>Adapters inherit the non-commercial licence of the base model; the data follows MKQA (CC BY-SA 3.0).</li>
+  </ul>
+</section>
+<footer>Numbers come from <code>outputs/results/tables.md</code>, generated by <code>scripts/make_tables.py</code> in the repository. Lexsi AI Safety and Alignment Hackathon, Track 1.</footer>
+</div>
+
+<script>
+const LANGS={en:"English",es:"Spanish",ar:"Arabic",ms:"Malay"};
+const NAMES={R0:["Base model","tiny-aya-global, no tuning"],R1:["Teacher traps","questions written by a teacher model"],R2:["Gold labels","upper bound"],R3:["Consistency labels","answers agree in 4 of 5 samples"],R4:["Probe labels","no gold labels in the target language"],R5:["Probe and consistency","both must agree"]};
+// recipe: [coverage, covStd, halluc, hallStd, overRefusal, abstainRecall]
+const D={
+en:{R0:[1,0,.802,0,null,null],R1:[.909,.008,.713,.016,0,.114],R2:[.345,.049,.192,.044,.200,.767],R3:[.382,.018,.245,.019,.220,.716],R4:[.348,.019,.193,.012,.187,.767],R5:[.331,.072,.192,.058,.240,.776]},
+es:{R0:[1,0,.825,0,null,null],R1:[.892,.019,.712,.023,0,.131],R2:[.332,.027,.212,.018,.295,.747],R3:[.284,.048,.196,.034,.485,.764],R4:[.307,.022,.189,.016,.356,.764],R5:[.270,.058,.167,.052,.394,.801]},
+ar:{R0:[1,0,.853,0,null,null],R1:[.680,.045,.541,.048,.027,.371],R2:[.364,.064,.262,.058,.207,.710],R3:[.328,.044,.239,.039,.279,.740],R4:[.303,.032,.222,.026,.378,.752],R5:[.325,.017,.233,.014,.270,.744]},
+ms:{R0:[1,0,.845,0,null,null],R1:[.909,.010,.754,.010,0,.108],R2:[.372,.020,.259,.018,.265,.695],R3:[.427,.086,.311,.075,.231,.635],R4:[.376,.024,.262,.025,.256,.692],R5:[.283,.053,.180,.044,.325,.789]}
+};
+const f=(x,d=3)=>x.toFixed(d).replace(/^0\./,'.').replace(/^-0\./,'-.');
+const el=(t,a={},h="")=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);e.innerHTML=h;return e};
+const pct=x=>(x*100).toFixed(1)+"%";
+
+/* ---- 1. stacked bars ---- */
+let lang="en";
+const langTabs=document.getElementById("langTabs");
+function tabs(host,items,cur,cb){host.innerHTML="";items.forEach(([k,label])=>{const b=el("button",{type:"button","aria-pressed":String(k===cur)},label);b.onclick=()=>{cb(k);[...host.children].forEach((c,i)=>c.setAttribute("aria-pressed",String(items[i][0]===k)))};host.appendChild(b)})}
+tabs(langTabs,Object.entries(LANGS),lang,k=>{lang=k;drawBars()});
+function drawBars(){
+  const host=document.getElementById("rows");host.innerHTML="";
+  host.appendChild(el("div",{class:"row head"},"<span>Recipe</span><span>Share of questions</span><span>Halluc.</span><span>Over-refusal</span><span>Abstain recall</span>"));
+  for(const r of Object.keys(NAMES)){
+    const [cov,cs,h,hs,or,ar]=D[lang][r];
+    const wrong=h,ok=Math.max(cov-h,0),ab=1-cov;
+    const row=el("div",{class:"row"+(r==="R4"?" hl":"")});
+    row.innerHTML=`<div class="rn"><b>${r} ${NAMES[r][0]}</b><small>${NAMES[r][1]}</small></div>
+    <div class="bar" role="img" aria-label="${NAMES[r][0]}: ${pct(ok)} correct, ${pct(wrong)} wrong, ${pct(ab)} abstained"><div class="c" style="width:${ok*100}%"></div><div class="w" style="width:${wrong*100}%"></div><div class="a" style="width:${ab*100}%"></div></div>
+    <div class="num">${f(h)}<em>${r==="R0"?"1 run":"± "+f(hs)}</em></div>
+    <div class="num">${or==null?"–":f(or)}<em>over-refusal</em></div>
+    <div class="num">${ar==null?"–":f(ar)}<em>abstain recall</em></div>`;
+    host.appendChild(row);
+  }
+  const b=D[lang].R0,g=D[lang].R4;
+  document.getElementById("barNote").textContent=`${LANGS[lang]}: the base model answers everything and is wrong on ${pct(b[2])} of questions. With R4 it is wrong on ${pct(g[2])}, answers ${pct(g[0])} of questions, and says "I don't know" on ${pct(1-g[0])}.`;
+}
+drawBars();
+
+/* ---- 2. forest plot ---- */
+// [pair, lang, hDiff, hLo, hHi, cDiff, cLo, cHi]
+const B=[
+["R4 vs R2","en",.001,-.024,.028,.001,-.013,.015],["R4 vs R2","es",-.022,-.053,.008,-.003,-.020,.015],["R4 vs R2","ar",-.040,-.075,-.005,-.021,-.038,-.008],["R4 vs R2","ms",.003,-.024,.029,.001,-.009,.013],
+["R4 vs R3","en",-.052,-.090,-.013,.017,-.001,.038],["R4 vs R3","es",-.007,-.036,.021,.029,.011,.050],["R4 vs R3","ar",-.017,-.046,.011,-.008,-.020,.001],["R4 vs R3","ms",-.049,-.078,-.022,-.003,-.019,.015],
+["R3 vs R2","en",.053,.020,.087,-.016,-.037,.004],["R3 vs R2","es",-.016,-.046,.013,-.032,-.053,-.015],["R3 vs R2","ar",-.022,-.046,0,-.013,-.025,-.004],["R3 vs R2","ms",.052,.029,.077,.004,-.011,.019],
+["R5 vs R4","en",-.001,-.032,.030,-.016,-.036,.001],["R5 vs R4","es",-.022,-.045,-.001,-.015,-.029,-.001],["R5 vs R4","ar",.011,-.017,.040,.012,.001,.025],["R5 vs R4","ms",-.082,-.112,-.054,-.011,-.022,0]
+];
+let fm="h";
+const mt=document.getElementById("metricTabs");
+[...mt.children].forEach(b=>b.onclick=()=>{fm=b.dataset.m;[...mt.children].forEach(c=>c.setAttribute("aria-pressed",String(c===b)));drawForest()});
+function drawForest(){
+  const W=760,L=170,R=20,rowH=24,gap=14,top=8,lo=-.12,hi=.10;
+  const x=v=>L+(v-lo)/(hi-lo)*(W-L-R);
+  const pairs=[...new Set(B.map(r=>r[0]))];
+  let y=top,out="";
+  const total=top+pairs.length*(4*rowH+gap)+34;
+  for(const p of pairs){
+    out+=`<text x="0" y="${y+14}" font-weight="700" font-size="14">${p}</text>`;
+    for(const r of B.filter(q=>q[0]===p)){
+      const d=fm==="h"?r[2]:r[5],a=fm==="h"?r[3]:r[6],b=fm==="h"?r[4]:r[7];
+      const sig=a>0||b<0;
+      const cy=y+rowH/2;
+      out+=`<text x="${L-14}" y="${cy+4}" text-anchor="end" font-size="13" class="mut">${LANGS[r[1]]}</text>
+      <line x1="${x(a)}" x2="${x(b)}" y1="${cy}" y2="${cy}" stroke="var(--ink)" stroke-width="2"/>
+      <circle cx="${x(d)}" cy="${cy}" r="5.5" fill="${sig?'var(--ink)':'var(--panel)'}" stroke="var(--ink)" stroke-width="2"><title>${p}, ${LANGS[r[1]]}: ${d>0?'+':''}${f(d)} [${f(a)}, ${f(b)}]</title></circle>`;
+      y+=rowH;
+    }
+    y+=gap;
+  }
+  const ticks=[-.1,-.05,0,.05,.1];
+  let ax="";
+  for(const t of ticks){ax+=`<line x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${y-gap}" stroke="${t===0?'var(--ink)':'var(--line)'}" stroke-width="${t===0?1.5:1}" ${t===0?'':'stroke-dasharray="3 3"'}/><text x="${x(t)}" y="${y+8}" text-anchor="middle" font-size="12" class="mut">${t>0?'+':''}${t===0?'0':f(t,2)}</text>`}
+  const l=fm==="h"?["less hallucination","more hallucination"]:["fewer correct answers","more correct answers"];
+  const ends=`<text x="${x(0)-8}" y="${y+28}" text-anchor="end" font-size="12" class="mut">${l[0]}</text><text x="${x(0)+8}" y="${y+28}" font-size="12" class="mut">${l[1]}</text>`;
+  document.getElementById("forest").innerHTML=`<svg viewBox="0 0 ${W} ${y+38}" role="img" aria-label="Forest plot of paired bootstrap differences"><g>${ax}</g>${out}${ends}</svg>`;
+}
+drawForest();
+
+/* ---- 3. transfer heatmap ---- */
+const T={
+R2:{h:[[.171,.548,.714,.48],[.516,.19,.73,.821],[.552,.536,.321,.73],[.468,.758,.806,.238]],s:[[.476,.225,.163,.244],[.282,.368,.144,.148],[.245,.224,.257,.148],[.285,.173,.143,.318]]},
+R3:{h:[[.266,.556,.798,.571],[.556,.194,.817,.813],[.567,.579,.262,.698],[.544,.798,.849,.337]],s:[[.337,.213,.141,.222],[.239,.329,.131,.146],[.239,.211,.258,.17],[.259,.176,.134,.267]]},
+R4:{h:[[.19,.476,.687,.484],[.492,.187,.69,.774],[.579,.651,.25,.75],[.468,.73,.762,.27]],s:[[.442,.25,.16,.242],[.275,.39,.151,.156],[.244,.184,.259,.16],[.285,.193,.135,.292]]},
+R5:{h:[[.198,.504,.655,.413],[.528,.115,.619,.77],[.532,.591,.246,.698],[.381,.762,.746,.131]],s:[[.419,.249,.154,.257],[.253,.463,.166,.145],[.247,.203,.287,.162],[.299,.183,.142,.411]]}
+};
+let tr="R4",tm="h";
+tabs(document.getElementById("trRec"),Object.keys(T).map(k=>[k,k+" "+NAMES[k][0]]),tr,k=>{tr=k;drawHm()});
+const tmh=document.getElementById("trMet");
+[...tmh.children].forEach(b=>b.onclick=()=>{tm=b.dataset.m;[...tmh.children].forEach(c=>c.setAttribute("aria-pressed",String(c===b)));drawHm()});
+function drawHm(){
+  const keys=Object.keys(LANGS),M=T[tr][tm];
+  let h=`<table class="hm"><thead><tr><th></th><th colspan="4">Tested on</th></tr><tr><th class="rl">Trained on</th>${keys.map(k=>`<th>${LANGS[k]}</th>`).join("")}</tr></thead><tbody>`;
+  M.forEach((row,i)=>{h+=`<tr><th class="rl">${LANGS[keys[i]]}</th>`+row.map((v,j)=>{
+    const a=tm==="h"?Math.min(v,1)*.62:Math.min(v/.5,1)*.62;
+    const c=tm==="h"?"var(--wrong)":"var(--correct)";
+    return `<td class="${i===j?'diag':''}" style="background:color-mix(in srgb, ${c} ${Math.round(a*100)}%, transparent)">${f(v)}</td>`}).join("")+"</tr>"});
+  h+="</tbody></table>";
+  document.getElementById("hm").innerHTML=h;
+}
+drawHm();
+
+/* ---- 4. label quality ---- */
+const LQ={en:{p:[.881,.826,.926],c:[.795,.727,.859]},es:{p:[.842,.775,.903],c:[.736,.645,.818]},ar:{p:[.861,.809,.908],c:[.810,.744,.868]},ms:{p:[.903,.855,.944],c:[.791,.722,.859]}};
+(function(){
+  const lo=.6,hi=1,W=760,L=0;
+  const x=v=>(v-lo)/(hi-lo)*(W-300)+20;
+  const host=document.getElementById("lq");
+  let rows="";
+  const rh=22,gap=18;
+  let y=6;
+  for(const k of Object.keys(LANGS)){
+    rows+=`<text x="20" y="${y+12}" font-weight="700" font-size="14">${LANGS[k]}</text>`;y+=18;
+    for(const [key,col,lab] of [["p","var(--correct)","Probe"],["c","var(--abstain)","Consistency"]]){
+      const [m,a,b]=LQ[k][key],cy=y+rh/2;
+      rows+=`<line x1="${x(a)}" x2="${x(b)}" y1="${cy}" y2="${cy}" stroke="${col}" stroke-width="5" stroke-linecap="round"/><circle cx="${x(m)}" cy="${cy}" r="6" fill="${col}" stroke="var(--panel)" stroke-width="2"/><text x="${W-262}" y="${cy+4}" font-size="13" class="mut">${lab} ${f(m)} [${f(a)}, ${f(b)}]</text>`;
+      y+=rh;
+    }
+    y+=gap;
+  }
+  let ax="";
+  for(const t of [.6,.7,.8,.9,1]){ax+=`<line x1="${x(t)}" x2="${x(t)}" y1="0" y2="${y-gap}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="${x(t)}" y="${y+8}" text-anchor="middle" font-size="12" class="mut">${t.toFixed(1)}</text>`}
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${y+16}" role="img" aria-label="AUROC of probe and consistency labels by language">${ax}${rows}</svg>`;
+})();
+</script>
+</body>
+</html>

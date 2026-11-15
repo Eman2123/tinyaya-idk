@@ -11,6 +11,8 @@ Lexsi AI Safety and Alignment Hackathon, Track 1 (Fine-tuning and Data Curation)
 [![Base model](https://img.shields.io/badge/base-CohereLabs%2Ftiny--aya--global-orange)](https://huggingface.co/CohereLabs/tiny-aya-global)
 [![Code licence](https://img.shields.io/badge/code-MIT-green)](LICENSE)
 [![Toolkits](https://img.shields.io/badge/Lexsi-CuratorKIT%20%2B%20AuditKIT-purple)](#4-lexsi-toolkits-used)
+[![Results explorer](https://img.shields.io/badge/results-explorer-teal)](https://eman2123.github.io/tinyaya-idk/)
+[![HF collections](https://img.shields.io/badge/HF-collections-yellow)](https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79)
 
 </div>
 
