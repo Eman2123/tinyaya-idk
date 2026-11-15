@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TinyAya IDK: results explorer</title>
-<meta name="description" content="Results of teaching TinyAya to say 'I don't know' without gold labels in the target language: 61 runs, 5 recipes, 4 languages.">
+<meta name="description" content="Teaching TinyAya to say 'I don't know' without gold labels in the target language: 61 runs, 5 recipes, 4 languages.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<meta name="theme-color" content="#16212C">
+<meta name="theme-color" content="#0C1626">
 <meta property="og:type" content="website">
 <meta property="og:title" content="TinyAya IDK: results explorer">
 <meta property="og:description" content="Teaching TinyAya to say 'I don't know' without gold labels in the target language: 61 runs, 5 recipes, 4 languages.">
@@ -15,122 +15,179 @@
 <link rel="canonical" href="https://eman2123.github.io/tinyaya-idk/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F3F5F7; --panel:#FFFFFF; --ink:#16212C; --muted:#5B6B7A; --line:#D8DFE6;
-  --correct:#1E7D6F; --wrong:#C4423C; --abstain:#9AA7B4; --accent:#16212C; --hl:#E6F1EF;
+  --bg:#EEF2F6; --panel:#FFFFFF; --ink:#0F1B2B; --muted:#586878; --line:#D9E1E9; --soft:#F5F8FB;
+  --correct:#14907F; --wrong:#D8453D; --abstain:#8A9BAD; --hl:#E5F3F0;
+  --shadow:0 1px 2px rgba(12,22,38,.05),0 12px 32px -12px rgba(12,22,38,.18);
+  --hero:#0C1626; --hero2:#13233B; --hero-ink:#EAF1F8; --hero-muted:#9DB0C4; --hero-line:#243752;
+  --h-correct:#2FD1B8; --h-wrong:#FF6A5E; --h-abstain:#5C7088;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0F161D; --panel:#17212B; --ink:#E7EDF2; --muted:#93A3B2; --line:#2A3743;
-    --correct:#3FB5A3; --wrong:#E2625B; --abstain:#5F7080; --accent:#E7EDF2; --hl:#1B2C2D;
+    --bg:#0A111B; --panel:#111C2A; --ink:#E8EFF6; --muted:#98A9BA; --line:#223245; --soft:#0E1824;
+    --correct:#34C4AE; --wrong:#F2665D; --abstain:#6A7D91; --hl:#13292B;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -12px rgba(0,0,0,.6);
   }
 }
-:root[data-theme="dark"]{
-  --bg:#0F161D; --panel:#17212B; --ink:#E7EDF2; --muted:#93A3B2; --line:#2A3743;
-  --correct:#3FB5A3; --wrong:#E2625B; --abstain:#5F7080; --accent:#E7EDF2; --hl:#1B2C2D;
-}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;font-variant-numeric:tabular-nums}
-.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
-header{padding:40px 0 20px}
-h1{font-size:clamp(30px,5vw,46px);line-height:1.08;margin:0 0 12px;font-weight:800;letter-spacing:-.02em;max-width:18ch}
-.lede{max-width:62ch;color:var(--muted);margin:0 0 16px;font-size:17px}
-.links{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:15px}
-.links a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--abstain)}
-.links a:hover,.links a:focus-visible{text-decoration-color:var(--ink)}
-section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:24px;margin:0 0 20px}
-h2{font-size:22px;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
-.sub{color:var(--muted);margin:0 0 18px;max-width:68ch;font-size:15px}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Newsreader",Georgia,serif;font-size:18px;line-height:1.55;font-variant-numeric:tabular-nums}
+h1,h2,h3,.ui,button,.num,table.hm,svg text,.rn b,.legend,.tabs,.links,.note,small,.cap{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+a{color:inherit}
+/* ---------- hero ---------- */
+.hero{background:radial-gradient(1200px 500px at 85% -10%,#1B3556 0%,transparent 60%),var(--hero);color:var(--hero-ink);padding:0 0 56px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;text-decoration:none}
+.brand img{width:28px;height:28px;border-radius:7px}
+.links{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14px}
+.links a{color:var(--hero-muted);text-decoration:none;border-bottom:1px solid transparent}
+.links a:hover,.links a:focus-visible{color:var(--hero-ink);border-bottom-color:var(--hero-ink)}
+h1{font-size:clamp(38px,6.4vw,76px);line-height:1.02;margin:34px 0 18px;font-weight:800;letter-spacing:-.03em;max-width:14ch}
+.lede{max-width:56ch;color:var(--hero-muted);font-size:clamp(18px,2.2vw,21px);margin:0 0 30px;line-height:1.5}
+.ctrl{display:flex;flex-wrap:wrap;gap:14px 28px;margin:0 0 22px;align-items:flex-end}
+.ctrl label{display:block;font-size:13px;color:var(--hero-muted);margin:0 0 6px}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#0A1322;border:1px solid var(--hero-line);padding:4px;border-radius:10px}
+.seg button{font-size:14px;padding:7px 13px;border:0;background:transparent;color:var(--hero-muted);border-radius:7px;cursor:pointer;min-height:36px;transition:background .2s,color .2s}
+.seg button:hover{color:var(--hero-ink)}
+.seg button[aria-pressed="true"]{background:var(--hero-ink);color:var(--hero)}
+.seg button:focus-visible,.tabs button:focus-visible,.links a:focus-visible,.brand:focus-visible{outline:3px solid var(--h-correct);outline-offset:2px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.wf h2{font-size:19px;margin:0 0 2px;font-weight:700;letter-spacing:-.01em}
+.wf .cap{color:var(--hero-muted);font-size:14px;margin:0 0 12px;min-height:21px}
+.dots{display:grid;grid-template-columns:repeat(18,1fr);gap:3.5px;padding:14px;background:var(--hero2);border:1px solid var(--hero-line);border-radius:14px}
+.dots i{aspect-ratio:1;border-radius:3px;background:var(--hero-line);transition:background .5s cubic-bezier(.2,.7,.2,1)}
+.dots i.c{background:var(--h-correct)}.dots i.w{background:var(--h-wrong)}.dots i.a{background:var(--h-abstain)}
+.tally{display:flex;flex-wrap:wrap;gap:6px 20px;margin:14px 0 0;font-size:15px}
+.tally span{display:flex;align-items:baseline;gap:7px}
+.tally b{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.tally em{font-style:normal;color:var(--hero-muted);font-size:14px}
+.tally i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.heronote{margin:20px 0 0;color:var(--hero-muted);font-size:14px;max-width:70ch;font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.read{margin:22px 0 0;font-size:clamp(18px,2.2vw,21px);max-width:62ch;color:var(--hero-ink)}
+/* ---------- findings strip ---------- */
+.finds{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:-34px 0 28px;background:var(--panel);border-radius:14px;box-shadow:var(--shadow);position:relative;overflow:hidden;border:1px solid var(--line)}
+.finds div{padding:22px 24px}
+.finds div+div{border-left:1px solid var(--line)}
+.finds h3{margin:0 0 6px;font-size:17px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
+.finds p{margin:0;font-size:16px;color:var(--muted);line-height:1.45}
+/* ---------- sections ---------- */
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:30px 30px 26px;margin:0 0 22px;box-shadow:var(--shadow)}
+h2.t{font-size:clamp(24px,3.2vw,32px);line-height:1.12;margin:0 0 10px;font-weight:800;letter-spacing:-.02em;max-width:26ch}
+.sub{color:var(--muted);margin:0 0 20px;max-width:64ch}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
-.tabs button{font:inherit;font-size:14px;padding:7px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;cursor:pointer;min-height:38px}
+.tabs button{font-size:14px;padding:7px 14px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:8px;cursor:pointer;min-height:38px;transition:background .2s}
+.tabs button:hover{background:var(--hl)}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
-.tabs button:focus-visible,.links a:focus-visible,summary:focus-visible{outline:3px solid var(--correct);outline-offset:2px}
-.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;margin:0 0 14px}
-.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
-.rows{display:grid;gap:0}
-.row{display:grid;grid-template-columns:200px 1fr 78px 78px 78px;gap:6px 14px;align-items:center;padding:8px 8px;border-top:1px solid var(--line)}
-.row.head{border-top:0;font-size:13px;color:var(--muted);padding-bottom:4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;margin:0 0 14px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.rows{display:grid}
+.row{display:grid;grid-template-columns:210px 1fr 76px 84px 84px;gap:6px 16px;align-items:center;padding:11px 10px;border-top:1px solid var(--line)}
+.row.head{border-top:0;font-size:13px;color:var(--muted);padding-bottom:6px}
 .row.head span{text-align:right}.row.head span:first-child,.row.head span:nth-child(2){text-align:left}
-.row.hl{background:var(--hl);border-radius:6px;border-top-color:transparent}
-.rn b{display:block;font-weight:700;font-size:15px;line-height:1.25}
-.rn small{color:var(--muted);font-size:13px;line-height:1.3;display:block}
-.bar{display:flex;height:26px;border-radius:4px;overflow:hidden;background:var(--line)}
-.bar div{height:100%;transition:width .45s cubic-bezier(.2,.7,.2,1)}
+.row.hl{background:var(--hl);border-radius:10px;border-top-color:transparent}
+.rn b{display:block;font-weight:700;font-size:16px;line-height:1.2}
+.rn small{color:var(--muted);font-size:13px;line-height:1.3;display:block;margin-top:2px}
+.bar{display:flex;height:24px;border-radius:6px;overflow:hidden;background:var(--line);gap:2px}
+.bar div{height:100%;transition:width .5s cubic-bezier(.2,.7,.2,1)}
 .bar .c{background:var(--correct)}.bar .w{background:var(--wrong)}.bar .a{background:var(--abstain)}
-.num{text-align:right;font-size:15px}
-.num em{display:block;font-style:normal;color:var(--muted);font-size:12px}
-.callout{margin:16px 0 0;padding:12px 14px;border-left:3px solid var(--correct);background:var(--hl);border-radius:0 6px 6px 0;font-size:15px;max-width:78ch}
-.note{color:var(--muted);font-size:13px;margin:12px 0 0;max-width:78ch}
+.num{text-align:right;font-size:16px;font-weight:500}
+.num em{display:block;font-style:normal;color:var(--muted);font-size:12px;font-weight:400}
+.callout{margin:20px 0 0;padding:14px 18px;border-radius:10px;background:var(--soft);border:1px solid var(--line);max-width:74ch}
+.note{color:var(--muted);font-size:14px;margin:14px 0 0;max-width:80ch;font-family:"Bricolage Grotesque",system-ui,sans-serif}
 svg{display:block;width:100%;height:auto}
+svg text{fill:var(--ink)}
+svg .mut{fill:var(--muted)}
 #forest,#lq{overflow-x:auto}
 #forest svg,#lq svg{min-width:640px}
-svg text{font-family:inherit;fill:var(--ink)}
-svg .mut{fill:var(--muted)}
-.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:560px}
-table.hm{border-collapse:separate;border-spacing:4px;width:100%;max-width:560px;font-size:15px}
+g.fr{cursor:default}
+g.fr:hover line,g.fr:hover circle{filter:drop-shadow(0 0 3px rgba(20,144,127,.55))}
+table.hm{border-collapse:separate;border-spacing:5px;width:100%;max-width:600px;font-size:16px}
 table.hm th{font-weight:500;color:var(--muted);font-size:13px;padding:2px 4px;text-align:center}
 table.hm th.rl{text-align:right;white-space:nowrap}
-table.hm td{height:52px;text-align:center;border-radius:5px;position:relative;color:var(--ink)}
-table.hm td.diag{outline:2px solid var(--ink);outline-offset:-2px;font-weight:700}
-.axis-t{font-size:13px;color:var(--muted);margin:6px 0 0}
-.lq{display:grid;gap:14px}
-.lqr{display:grid;grid-template-columns:70px 1fr;gap:8px 14px;align-items:center}
-.lqr b{font-size:15px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-ul.lim{margin:0;padding-left:20px;max-width:78ch;font-size:15px}
-ul.lim li{margin:0 0 6px}
-footer{padding:6px 0 48px;color:var(--muted);font-size:14px}
+table.hm td{height:54px;text-align:center;border-radius:8px;color:var(--ink);font-weight:500}
+table.hm td.diag{outline:2px solid var(--ink);outline-offset:-2px;font-weight:800}
+.scale{display:flex;align-items:center;gap:10px;margin:12px 0 0;font-size:13px;color:var(--muted);font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.scale i{display:block;width:160px;height:10px;border-radius:5px}
+ul.lim{margin:0;padding-left:20px;max-width:74ch}
+ul.lim li{margin:0 0 8px}
+footer{padding:4px 0 56px;color:var(--muted);font-size:14px;font-family:"Bricolage Grotesque",system-ui,sans-serif}
+footer code{font-size:13px}
+@media (max-width:860px){
+  .finds{grid-template-columns:1fr}.finds div+div{border-left:0;border-top:1px solid var(--line)}
+  .pair{grid-template-columns:1fr;gap:24px}
+}
 @media (max-width:760px){
-  section{padding:16px}
+  body{font-size:17px}
+  section{padding:20px 16px}
   .row{grid-template-columns:1fr 1fr 1fr;gap:6px 8px}
-  .row .rn{grid-column:1 / -1}
-  .row .bar{grid-column:1 / -1}
+  .row .rn,.row .bar{grid-column:1 / -1}
   .row.head{display:none}
   .num{text-align:left}
-  .two{grid-template-columns:1fr}
+  .dots{gap:2.5px;padding:10px}
 }
-@media (prefers-reduced-motion:reduce){.bar div{transition:none}}
+@media (prefers-reduced-motion:reduce){.bar div,.dots i{transition:none!important}}
 </style>
 </head>
 <body>
+<div class="hero">
 <div class="wrap">
-<noscript><p style="padding:16px;border:1px solid var(--line);border-radius:8px;margin-top:16px">This page draws its charts with JavaScript. The same numbers are in <a href="https://github.com/Eman2123/tinyaya-idk">the repository README</a>.</p></noscript>
-<header>
-  <h1>Teaching TinyAya to say "I don't know"</h1>
-  <p class="lede">Results from 61 runs of CohereLabs/tiny-aya-global: the base model plus five fine-tuning recipes in English, Spanish, Arabic and Malay. Test split, 252 MKQA questions per language. Recipes use 3 seeds; the base model is one deterministic run.</p>
-  <div class="links">
-    <a href="https://github.com/Eman2123/tinyaya-idk">Code and write-up on GitHub</a>
-    <a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79">Adapters on Hugging Face</a>
-    <a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-data-6af954af02014765d70ba236">Data and outputs on Hugging Face</a>
+  <div class="top">
+    <a class="brand" href="#top"><img src="favicon.svg" alt="" width="28" height="28">TinyAya IDK</a>
+    <nav class="links" aria-label="Project links">
+      <a href="https://github.com/Eman2123/tinyaya-idk">GitHub</a>
+      <a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79">Adapters</a>
+      <a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-data-6af954af02014765d70ba236">Data</a>
+    </nav>
   </div>
-</header>
+  <h1 id="top">Teaching TinyAya to say "I don't know"</h1>
+  <p class="lede">A small multilingual model guesses on almost every question it cannot answer. We fine-tuned it to abstain instead, with labels that need no gold answers in the target language. Here are the same 252 test questions, before and after.</p>
+  <noscript><p class="heronote">The charts on this page need JavaScript. The same numbers are in the <a href="https://github.com/Eman2123/tinyaya-idk">repository README</a>.</p></noscript>
+  <div class="ctrl">
+    <div><label id="lL">Language</label><div class="seg" id="heroLang" role="group" aria-labelledby="lL"></div></div>
+    <div><label id="lR">Compare the base model with</label><div class="seg" id="heroRec" role="group" aria-labelledby="lR"></div></div>
+  </div>
+  <div class="pair">
+    <div class="wf"><h2 id="aT">Base model</h2><p class="cap" id="aC"></p><div class="dots" id="aD" role="img"></div><div class="tally" id="aY"></div></div>
+    <div class="wf"><h2 id="bT">R4 Probe labels</h2><p class="cap" id="bC"></p><div class="dots" id="bD" role="img"></div><div class="tally" id="bY"></div></div>
+  </div>
+  <p class="read" id="read"></p>
+  <p class="heronote">Each square is one test question. Counts are the mean rate over 3 training seeds, scaled to 252 questions; the base model is a single deterministic run.</p>
+</div>
+</div>
+
+<div class="wrap">
+<div class="finds">
+  <div><h3>Four recipes cut hallucination from about 0.8 to between 0.17 and 0.31</h3><p>Teacher-written traps (R1) help far less: in English, Spanish and Malay they lower it only from about 0.8 to 0.7.</p></div>
+  <div><h3>A probe matches gold labels in three of four languages</h3><p>R4 uses no gold answers in the target language. It is not significantly different from R2 in English, Spanish and Malay.</p></div>
+  <div><h3>Abstention transfers across languages only partly</h3><p>English to Spanish and Malay helps. Arabic and the other pairs move much less.</p></div>
+</div>
 
 <section id="s-bars" aria-labelledby="h-bars">
-  <h2 id="h-bars">What happens to the same 252 questions</h2>
-  <p class="sub">Each bar is all test questions, split three ways. A good abstaining model turns red (wrong answers) into grey (abstained) without losing much green (correct).</p>
+  <h2 class="t" id="h-bars">Every recipe, one language at a time</h2>
+  <p class="sub">Each bar is all 252 test questions. A good abstaining model turns red into grey without losing much green.</p>
   <div class="tabs" id="langTabs" role="group" aria-label="Language"></div>
   <div class="legend"><span><i style="background:var(--correct)"></i>Answered correctly</span><span><i style="background:var(--wrong)"></i>Answered wrongly (hallucination)</span><span><i style="background:var(--abstain)"></i>Said "I don't know"</span></div>
   <div class="rows" id="rows"></div>
   <p class="callout" id="barNote"></p>
-  <p class="note">Over-refusal is the share of questions the base model answered correctly that the tuned model refused. Abstain recall is the share of questions the base model got wrong that the tuned model refused. Values are means over 3 seeds, with standard deviation under hallucination.</p>
+  <p class="note">Over-refusal is the share of questions the base model answered correctly that the tuned model refused. Abstain recall is the share of questions the base model got wrong that the tuned model refused. Means over 3 seeds; the standard deviation is under hallucination.</p>
 </section>
 
 <section aria-labelledby="h-forest">
-  <h2 id="h-forest">Is a probe as good as gold labels?</h2>
+  <h2 class="t" id="h-forest">A probe is as good as gold labels in three of four languages</h2>
   <p class="sub">Paired bootstrap on the test questions, outcomes averaged over seeds. A filled dot means the 95% interval excludes zero. A hollow dot means we cannot tell the two recipes apart.</p>
   <div class="tabs" id="metricTabs" role="group" aria-label="Metric">
     <button type="button" data-m="h" aria-pressed="true">Hallucination difference</button>
     <button type="button" data-m="c" aria-pressed="false">Correct-answer difference</button>
   </div>
   <div id="forest"></div>
-  <p class="callout">R4 (probe labels, no gold labels in the target language) matches R2 (gold labels) in English, Spanish and Malay. In Arabic R4 is more conservative: 0.040 less hallucination, but also 0.021 fewer correct answers. Against R1 (teacher traps) R4 cuts hallucination by 0.32 to 0.52 in every language.</p>
+  <p class="callout">R4 matches R2 in English, Spanish and Malay. In Arabic R4 is more conservative: 0.040 less hallucination, but also 0.021 fewer correct answers. Against R1, R4 cuts hallucination by 0.32 to 0.52 in every language.</p>
 </section>
 
 <section aria-labelledby="h-tr">
-  <h2 id="h-tr">Does abstention carry over to another language?</h2>
+  <h2 class="t" id="h-tr">Abstention transfers across languages only partly</h2>
   <p class="sub">Rows are the language an adapter was trained on, columns the language it is tested on. The outlined diagonal is same-language. Seed 1 only.</p>
   <div class="tabs" id="trRec" role="group" aria-label="Recipe"></div>
   <div class="tabs" id="trMet" role="group" aria-label="Metric">
@@ -138,19 +195,20 @@ footer{padding:6px 0 48px;color:var(--muted);font-size:14px}
     <button type="button" data-m="s" aria-pressed="false">Selective accuracy (higher is better)</button>
   </div>
   <div id="hm"></div>
-  <p class="callout">Transfer is partial. English-trained adapters help most on Spanish and Malay (about 0.35 less hallucination than the base model); Arabic and the non-English pairs move much less. Base-model hallucination is 0.80 to 0.85 everywhere, so anything near that is no transfer at all.</p>
+  <div class="scale" id="scale"></div>
+  <p class="callout">English-trained adapters help most on Spanish and Malay, about 0.35 less hallucination than the base model. Arabic and the other pairs move much less. Base-model hallucination is 0.80 to 0.85 everywhere, so values near that mean no transfer.</p>
 </section>
 
 <section aria-labelledby="h-lq">
-  <h2 id="h-lq">How good are the labels that train R3 and R4?</h2>
-  <p class="sub">AUROC for telling known from unknown questions, with 95% intervals. The probe is trained on English gold labels and transferred; consistency needs at least 4 of 5 sampled answers to agree.</p>
+  <h2 class="t" id="h-lq">Probe labels rank known questions as well as consistency, or better</h2>
+  <p class="sub">AUROC for telling known from unknown questions, with 95% intervals. The probe trains on English gold labels and is transferred; consistency needs at least 4 of 5 sampled answers to agree.</p>
   <div class="legend"><span><i style="background:var(--correct)"></i>Probe (R4)</span><span><i style="background:var(--abstain)"></i>Consistency (R3)</span></div>
-  <div class="lq" id="lq"></div>
+  <div id="lq"></div>
   <p class="note">The intervals overlap in every language, so the fair reading is "comparable or better", not "clearly better". Precision of the known class is only 0.40 to 0.48 for both sources.</p>
 </section>
 
 <section aria-labelledby="h-lim">
-  <h2 id="h-lim">What these numbers do not show</h2>
+  <h2 class="t" id="h-lim">What these numbers do not show</h2>
   <ul class="lim">
     <li>One QA source (MKQA, translated questions) and small training sets, 238 to 382 examples.</li>
     <li>The probe trains on English gold labels, so the method is gold-free only in the target languages.</li>
@@ -178,11 +236,44 @@ const f=(x,d=3)=>x.toFixed(d).replace(/^0\./,'.').replace(/^-0\./,'-.');
 const el=(t,a={},h="")=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);e.innerHTML=h;return e};
 const pct=x=>(x*100).toFixed(1)+"%";
 
-/* ---- 1. stacked bars ---- */
-let lang="en";
-const langTabs=document.getElementById("langTabs");
+
+const N=252;
 function tabs(host,items,cur,cb){host.innerHTML="";items.forEach(([k,label])=>{const b=el("button",{type:"button","aria-pressed":String(k===cur)},label);b.onclick=()=>{cb(k);[...host.children].forEach((c,i)=>c.setAttribute("aria-pressed",String(items[i][0]===k)))};host.appendChild(b)})}
-tabs(langTabs,Object.entries(LANGS),lang,k=>{lang=k;drawBars()});
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---- hero: 252-question dot grids ---- */
+let hl="en",hr="R4";
+function alloc(l,r){const [cov,,h]=D[l][r];const w=Math.round(h*N),o=Math.round(Math.max(cov-h,0)*N);return [o,w,Math.max(N-o-w,0)]}
+function paint(id,cnt,first){
+  const host=document.getElementById(id);
+  if(!host.children.length){for(let i=0;i<N;i++)host.appendChild(el("i"))}
+  const kinds=[];cnt.forEach((n,k)=>{for(let i=0;i<n;i++)kinds.push("cwa"[k])});
+  const apply=()=>[...host.children].forEach((c,i)=>{c.className=kinds[i]||"";c.style.transitionDelay=reduce?"0ms":(i*1.6)+"ms"});
+  if(first&&!reduce){requestAnimationFrame(()=>requestAnimationFrame(apply))}else apply();
+}
+function tally(id,cnt){document.getElementById(id).innerHTML=
+  `<span><i style="background:var(--h-correct)"></i><b>${cnt[0]}</b><em>correct</em></span><span><i style="background:var(--h-wrong)"></i><b>${cnt[1]}</b><em>wrong</em></span><span><i style="background:var(--h-abstain)"></i><b>${cnt[2]}</b><em>"I don't know"</em></span>`}
+let firstPaint=true;
+function drawHero(){
+  const a=alloc(hl,"R0"),b=alloc(hl,hr);
+  document.getElementById("aT").textContent="Base model";
+  document.getElementById("aC").textContent="tiny-aya-global, no tuning";
+  document.getElementById("bT").textContent=hr+" "+NAMES[hr][0];
+  document.getElementById("bC").textContent=NAMES[hr][1].charAt(0).toUpperCase()+NAMES[hr][1].slice(1);
+  paint("aD",a,firstPaint);paint("bD",b,firstPaint);firstPaint=false;
+  tally("aY",a);tally("bY",b);
+  document.getElementById("aD").setAttribute("aria-label",`Base model, ${LANGS[hl]}: ${a[0]} correct, ${a[1]} wrong, ${a[2]} abstained out of ${N}`);
+  document.getElementById("bD").setAttribute("aria-label",`${hr}, ${LANGS[hl]}: ${b[0]} correct, ${b[1]} wrong, ${b[2]} abstained out of ${N}`);
+  const answered=b[0]+b[1];
+  document.getElementById("read").textContent=`${LANGS[hl]}: the base model gets ${a[1]} of ${N} questions wrong and never abstains. ${hr} gets ${b[1]} wrong, answers ${answered}, and says "I don't know" on ${b[2]}.`;
+}
+tabs(document.getElementById("heroLang"),Object.entries(LANGS),hl,k=>{hl=k;drawHero()});
+tabs(document.getElementById("heroRec"),["R1","R2","R3","R4","R5"].map(k=>[k,k+" "+NAMES[k][0]]),hr,k=>{hr=k;drawHero()});
+drawHero();
+
+/* ---- all recipes: stacked bars ---- */
+let lang="en";
+tabs(document.getElementById("langTabs"),Object.entries(LANGS),lang,k=>{lang=k;drawBars()});
 function drawBars(){
   const host=document.getElementById("rows");host.innerHTML="";
   host.appendChild(el("div",{class:"row head"},"<span>Recipe</span><span>Share of questions</span><span>Halluc.</span><span>Over-refusal</span><span>Abstain recall</span>"));
@@ -198,11 +289,11 @@ function drawBars(){
     host.appendChild(row);
   }
   const b=D[lang].R0,g=D[lang].R4;
-  document.getElementById("barNote").textContent=`${LANGS[lang]}: the base model answers everything and is wrong on ${pct(b[2])} of questions. With R4 it is wrong on ${pct(g[2])}, answers ${pct(g[0])} of questions, and says "I don't know" on ${pct(1-g[0])}.`;
+  document.getElementById("barNote").textContent=`${LANGS[lang]}: the base model is wrong on ${pct(b[2])} of questions. With R4 it is wrong on ${pct(g[2])}, answers ${pct(g[0])} of questions, and says "I don't know" on ${pct(1-g[0])}.`;
 }
 drawBars();
 
-/* ---- 2. forest plot ---- */
+/* ---- forest plot ---- */
 // [pair, lang, hDiff, hLo, hHi, cDiff, cLo, cHi]
 const B=[
 ["R4 vs R2","en",.001,-.024,.028,.001,-.013,.015],["R4 vs R2","es",-.022,-.053,.008,-.003,-.020,.015],["R4 vs R2","ar",-.040,-.075,-.005,-.021,-.038,-.008],["R4 vs R2","ms",.003,-.024,.029,.001,-.009,.013],
@@ -210,44 +301,44 @@ const B=[
 ["R3 vs R2","en",.053,.020,.087,-.016,-.037,.004],["R3 vs R2","es",-.016,-.046,.013,-.032,-.053,-.015],["R3 vs R2","ar",-.022,-.046,0,-.013,-.025,-.004],["R3 vs R2","ms",.052,.029,.077,.004,-.011,.019],
 ["R5 vs R4","en",-.001,-.032,.030,-.016,-.036,.001],["R5 vs R4","es",-.022,-.045,-.001,-.015,-.029,-.001],["R5 vs R4","ar",.011,-.017,.040,.012,.001,.025],["R5 vs R4","ms",-.082,-.112,-.054,-.011,-.022,0]
 ];
+
 let fm="h";
 const mt=document.getElementById("metricTabs");
 [...mt.children].forEach(b=>b.onclick=()=>{fm=b.dataset.m;[...mt.children].forEach(c=>c.setAttribute("aria-pressed",String(c===b)));drawForest()});
 function drawForest(){
-  const W=760,L=170,R=20,rowH=24,gap=14,top=8,lo=-.12,hi=.10;
+  const W=760,L=170,R=20,rowH=26,gap=16,top=8,lo=-.12,hi=.10;
   const x=v=>L+(v-lo)/(hi-lo)*(W-L-R);
   const pairs=[...new Set(B.map(r=>r[0]))];
   let y=top,out="";
-  const total=top+pairs.length*(4*rowH+gap)+34;
   for(const p of pairs){
-    out+=`<text x="0" y="${y+14}" font-weight="700" font-size="14">${p}</text>`;
+    out+=`<text x="0" y="${y+16}" font-weight="800" font-size="14">${p}</text>`;
     for(const r of B.filter(q=>q[0]===p)){
       const d=fm==="h"?r[2]:r[5],a=fm==="h"?r[3]:r[6],b=fm==="h"?r[4]:r[7];
-      const sig=a>0||b<0;
-      const cy=y+rowH/2;
-      out+=`<text x="${L-14}" y="${cy+4}" text-anchor="end" font-size="13" class="mut">${LANGS[r[1]]}</text>
-      <line x1="${x(a)}" x2="${x(b)}" y1="${cy}" y2="${cy}" stroke="var(--ink)" stroke-width="2"/>
-      <circle cx="${x(d)}" cy="${cy}" r="5.5" fill="${sig?'var(--ink)':'var(--panel)'}" stroke="var(--ink)" stroke-width="2"><title>${p}, ${LANGS[r[1]]}: ${d>0?'+':''}${f(d)} [${f(a)}, ${f(b)}]</title></circle>`;
+      const sig=a>0||b<0,cy=y+rowH/2;
+      const col=sig?(d<0&&fm==="h"?"var(--correct)":d>0&&fm==="h"?"var(--wrong)":"var(--ink)"):"var(--abstain)";
+      out+=`<g class="fr"><rect x="${L-150}" y="${y}" width="${W-L+150-R}" height="${rowH}" fill="transparent"/><text x="${L-14}" y="${cy+4}" text-anchor="end" font-size="13" class="mut">${LANGS[r[1]]}</text>
+      <line x1="${x(a)}" x2="${x(b)}" y1="${cy}" y2="${cy}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="${x(d)}" cy="${cy}" r="6" fill="${sig?col:'var(--panel)'}" stroke="${col}" stroke-width="2.5"><title>${p}, ${LANGS[r[1]]}: ${d>0?'+':''}${f(d)} [${f(a)}, ${f(b)}]</title></circle></g>`;
       y+=rowH;
     }
     y+=gap;
   }
-  const ticks=[-.1,-.05,0,.05,.1];
   let ax="";
-  for(const t of ticks){ax+=`<line x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${y-gap}" stroke="${t===0?'var(--ink)':'var(--line)'}" stroke-width="${t===0?1.5:1}" ${t===0?'':'stroke-dasharray="3 3"'}/><text x="${x(t)}" y="${y+8}" text-anchor="middle" font-size="12" class="mut">${t>0?'+':''}${t===0?'0':f(t,2)}</text>`}
+  for(const t of [-.1,-.05,0,.05,.1]){ax+=`<line x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${y-gap}" stroke="${t===0?'var(--ink)':'var(--line)'}" stroke-width="${t===0?1.5:1}" ${t===0?'':'stroke-dasharray="3 3"'}/><text x="${x(t)}" y="${y+8}" text-anchor="middle" font-size="12" class="mut">${t>0?'+':''}${t===0?'0':f(t,2)}</text>`}
   const l=fm==="h"?["less hallucination","more hallucination"]:["fewer correct answers","more correct answers"];
   const ends=`<text x="${x(0)-8}" y="${y+28}" text-anchor="end" font-size="12" class="mut">${l[0]}</text><text x="${x(0)+8}" y="${y+28}" font-size="12" class="mut">${l[1]}</text>`;
   document.getElementById("forest").innerHTML=`<svg viewBox="0 0 ${W} ${y+38}" role="img" aria-label="Forest plot of paired bootstrap differences"><g>${ax}</g>${out}${ends}</svg>`;
 }
 drawForest();
 
-/* ---- 3. transfer heatmap ---- */
+/* ---- transfer heatmap ---- */
 const T={
 R2:{h:[[.171,.548,.714,.48],[.516,.19,.73,.821],[.552,.536,.321,.73],[.468,.758,.806,.238]],s:[[.476,.225,.163,.244],[.282,.368,.144,.148],[.245,.224,.257,.148],[.285,.173,.143,.318]]},
 R3:{h:[[.266,.556,.798,.571],[.556,.194,.817,.813],[.567,.579,.262,.698],[.544,.798,.849,.337]],s:[[.337,.213,.141,.222],[.239,.329,.131,.146],[.239,.211,.258,.17],[.259,.176,.134,.267]]},
 R4:{h:[[.19,.476,.687,.484],[.492,.187,.69,.774],[.579,.651,.25,.75],[.468,.73,.762,.27]],s:[[.442,.25,.16,.242],[.275,.39,.151,.156],[.244,.184,.259,.16],[.285,.193,.135,.292]]},
 R5:{h:[[.198,.504,.655,.413],[.528,.115,.619,.77],[.532,.591,.246,.698],[.381,.762,.746,.131]],s:[[.419,.249,.154,.257],[.253,.463,.166,.145],[.247,.203,.287,.162],[.299,.183,.142,.411]]}
 };
+
 let tr="R4",tm="h";
 tabs(document.getElementById("trRec"),Object.keys(T).map(k=>[k,k+" "+NAMES[k][0]]),tr,k=>{tr=k;drawHm()});
 const tmh=document.getElementById("trMet");
@@ -261,30 +352,30 @@ function drawHm(){
     return `<td class="${i===j?'diag':''}" style="background:color-mix(in srgb, ${c} ${Math.round(a*100)}%, transparent)">${f(v)}</td>`}).join("")+"</tr>"});
   h+="</tbody></table>";
   document.getElementById("hm").innerHTML=h;
+  const c=tm==="h"?"var(--wrong)":"var(--correct)";
+  document.getElementById("scale").innerHTML=tm==="h"?`<span>0</span><i style="background:linear-gradient(90deg,transparent,${c})"></i><span>1 (all answers wrong)</span>`:`<span>0</span><i style="background:linear-gradient(90deg,transparent,${c})"></i><span>0.5 or more</span>`;
 }
 drawHm();
 
-/* ---- 4. label quality ---- */
+/* ---- label quality ---- */
 const LQ={en:{p:[.881,.826,.926],c:[.795,.727,.859]},es:{p:[.842,.775,.903],c:[.736,.645,.818]},ar:{p:[.861,.809,.908],c:[.810,.744,.868]},ms:{p:[.903,.855,.944],c:[.791,.722,.859]}};
+
 (function(){
-  const lo=.6,hi=1,W=760,L=0;
+  const lo=.6,hi=1,W=760;
   const x=v=>(v-lo)/(hi-lo)*(W-300)+20;
-  const host=document.getElementById("lq");
-  let rows="";
-  const rh=22,gap=18;
-  let y=6;
+  let rows="",y=6;const rh=24,gap=18;
   for(const k of Object.keys(LANGS)){
-    rows+=`<text x="20" y="${y+12}" font-weight="700" font-size="14">${LANGS[k]}</text>`;y+=18;
+    rows+=`<text x="20" y="${y+12}" font-weight="800" font-size="14">${LANGS[k]}</text>`;y+=20;
     for(const [key,col,lab] of [["p","var(--correct)","Probe"],["c","var(--abstain)","Consistency"]]){
       const [m,a,b]=LQ[k][key],cy=y+rh/2;
-      rows+=`<line x1="${x(a)}" x2="${x(b)}" y1="${cy}" y2="${cy}" stroke="${col}" stroke-width="5" stroke-linecap="round"/><circle cx="${x(m)}" cy="${cy}" r="6" fill="${col}" stroke="var(--panel)" stroke-width="2"/><text x="${W-262}" y="${cy+4}" font-size="13" class="mut">${lab} ${f(m)} [${f(a)}, ${f(b)}]</text>`;
+      rows+=`<line x1="${x(a)}" x2="${x(b)}" y1="${cy}" y2="${cy}" stroke="${col}" stroke-width="6" stroke-linecap="round" opacity=".55"/><circle cx="${x(m)}" cy="${cy}" r="6.5" fill="${col}" stroke="var(--panel)" stroke-width="2.5"/><text x="${W-262}" y="${cy+4}" font-size="13" class="mut">${lab} ${f(m)} [${f(a)}, ${f(b)}]</text>`;
       y+=rh;
     }
     y+=gap;
   }
   let ax="";
   for(const t of [.6,.7,.8,.9,1]){ax+=`<line x1="${x(t)}" x2="${x(t)}" y1="0" y2="${y-gap}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="${x(t)}" y="${y+8}" text-anchor="middle" font-size="12" class="mut">${t.toFixed(1)}</text>`}
-  host.innerHTML=`<svg viewBox="0 0 ${W} ${y+16}" role="img" aria-label="AUROC of probe and consistency labels by language">${ax}${rows}</svg>`;
+  document.getElementById("lq").innerHTML=`<svg viewBox="0 0 ${W} ${y+16}" role="img" aria-label="AUROC of probe and consistency labels by language">${ax}${rows}</svg>`;
 })();
 </script>
 </body>
