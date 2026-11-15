@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="docs/favicon.svg" alt="TinyAya IDK logo" width="96" height="96">
-
-# tinyaya-idk
+<h1 align="center"><img src="docs/favicon.svg" alt="TinyAya IDK logo" width="44" height="44" align="absmiddle"> tinyaya-idk</h1>
 
 ### Teaching TinyAya to say "I don't know" in languages with no labelled QA data
 
