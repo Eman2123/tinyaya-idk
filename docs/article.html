@@ -1,158 +1,144 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Teaching TinyAya to say "I don't know" in languages with no labelled QA data</title>
-<meta name="description" content="Gold-free abstention training for TinyAya: 61 runs, 5 recipes, 4 languages. Lexsi AI Safety and Alignment Hackathon, Track 1.">
+<meta name="description" content="How we trained a small multilingual model to abstain, using known/unknown labels that need no gold answers in the target language. 61 runs, 5 recipes, 4 languages.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2316212C'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-family='Arial' font-weight='800' font-size='42' fill='%233FB5A3'%3E?%3C/text%3E%3C/svg%3E">
 <style>
-:root{--bg:#fff;--ink:#14202e;--mut:#586878;--line:#dbe2ea;--soft:#f4f7fa;--acc:#14907f}
-@media(prefers-color-scheme:dark){:root{--bg:#0e1621;--ink:#e8eff6;--mut:#98a9ba;--line:#223245;--soft:#131f2d;--acc:#34c4ae}}
-body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.65 Georgia,"Times New Roman",serif}
-main{max-width:760px;margin:0 auto;padding:32px 20px 64px}
-h1,h2{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.15;letter-spacing:-.02em}
-h1{font-size:clamp(30px,5vw,44px);margin:8px 0 20px} h2{font-size:26px;margin:40px 0 10px}
-a{color:var(--acc)} code{font-size:.9em;background:var(--soft);padding:1px 5px;border-radius:4px}
-pre{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:14px;overflow:auto;font-size:14px;line-height:1.5} pre code{background:none;padding:0}
-table{border-collapse:collapse;width:100%;font:15px/1.4 system-ui,sans-serif;margin:16px 0;display:block;overflow-x:auto}
-th,td{border:1px solid var(--line);padding:8px 10px;text-align:left} th{background:var(--soft)}
-li{margin:4px 0}
-</style></head><body><main>
+:root{--bg:#fbfcfd;--ink:#13202e;--mut:#5a6a7a;--line:#dce3ea;--soft:#f1f5f8;--acc:#0f7f70;--c:#1e8f7f;--w:#d8453d;--a:#9aa9b9}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1520;--ink:#e8eff6;--mut:#9aabbc;--line:#223245;--soft:#121e2c;--acc:#3cc7b1;--c:#34c4ae;--w:#f2665d;--a:#667a8f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.7 Georgia,"Times New Roman",serif}
+.wrap{max-width:700px;margin:0 auto;padding:40px 20px 72px}
+h1,h2,h3,.ui,table,figcaption,.meta,.links{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1{font-size:clamp(32px,6vw,48px);line-height:1.08;letter-spacing:-.025em;margin:0 0 14px}
+h2{font-size:26px;line-height:1.2;letter-spacing:-.015em;margin:48px 0 10px}
+.meta{color:var(--mut);font-size:15px;margin:0 0 6px}
+.links{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:15px;margin:0 0 30px}
+a{color:var(--acc)}
+p{margin:0 0 18px}
+.tldr{border:1px solid var(--line);background:var(--soft);border-radius:12px;padding:18px 22px;margin:0 0 8px}
+.tldr b.ui{display:block;font-size:14px;color:var(--mut);margin:0 0 8px}
+.tldr ul{margin:0;padding-left:20px}.tldr li{margin:6px 0}
+figure{margin:26px 0}
+figcaption{font-size:14px;color:var(--mut);margin-top:10px;line-height:1.5}
+svg{width:100%;height:auto;display:block}
+svg .c{fill:var(--c)}svg .w{fill:var(--w)}svg .a{fill:var(--a)}
+svg text{fill:var(--ink);font-family:system-ui,sans-serif}
+svg .lb{font-weight:700;font-size:14px}svg .sm{font-size:12px;fill:var(--mut)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 18px;font:14px system-ui,sans-serif;color:var(--mut);margin:0 0 6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.4;margin:18px 0 6px;display:block;overflow-x:auto}
+th,td{border-bottom:1px solid var(--line);padding:9px 12px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--mut);font-size:13px}
+td.best{font-weight:700;color:var(--acc)}
+table.left td,table.left th{text-align:left;white-space:normal}
+pre{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font-size:14px;line-height:1.55}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+p code,li code{background:var(--soft);padding:1px 5px;border-radius:4px}
+blockquote{margin:22px 0;padding:2px 0 2px 18px;border-left:3px solid var(--acc);color:var(--mut)}
+li{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:44px 0 20px}
+footer{font:14px system-ui,sans-serif;color:var(--mut)}
+</style></head><body><div class="wrap">
+
+<p class="meta">Eman Mirza · 16 November 2026 · Lexsi AI Safety and Alignment Hackathon, Track 1</p>
 <h1>Teaching TinyAya to say "I don't know" in languages with no labelled QA data</h1>
-<p>Ask a small multilingual model a question it cannot answer and it will usually answer anyway. We measured this on CohereLabs/tiny-aya-global with 252 held-out MKQA questions per language. In English, Spanish, Arabic and Malay the base model answers every question and gets 80 to 85 percent of all questions wrong.</p>
-<p>The obvious fix is to fine-tune the model to abstain when it does not know. The catch is the labels. To train abstention you need to know which questions the model does not know, and that normally means gold answers. Most languages do not have them.</p>
-<p>This project asks whether we can get those known/unknown labels without gold answers in the target language, and still end up with a model that abstains about as well as one trained on gold labels. It was built for the Lexsi AI Safety and Alignment Hackathon, Track 1 (Fine-tuning and Data Curation).</p>
-<p><strong>Links:</strong> <a href="https://github.com/Eman2123/tinyaya-idk">code</a> · <a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79">adapters</a> · <a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-data-6af954af02014765d70ba236">data and outputs</a> · <a href="https://eman2123.github.io/tinyaya-idk/">results explorer</a></p>
-<h2>The idea</h2>
-<p>We label each training question as known or unknown in two gold-free ways:</p>
-<ul>
-<li><strong>Consistency.</strong> Sample five answers. If at least four agree, call the question known.</li>
-<li><strong>A hidden-state probe.</strong> Train a logistic regression on a middle layer of the model (layer -12) using English questions where we do have gold answers. Then apply it, unchanged, to Spanish, Arabic and Malay.</li>
-</ul>
-<p>Known questions keep their answer as the training target. Unknown questions get an "I don't know" in the question's language. We fine-tune a small LoRA adapter (r=16) for each language and compare five recipes:</p>
-<table>
-<thead>
-<tr>
-<th>Recipe</th>
-<th>Labels come from</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>R1</td>
-<td>Trap questions written by a teacher model</td>
-</tr>
-<tr>
-<td>R2</td>
-<td>Gold answers (the upper bound)</td>
-</tr>
-<tr>
-<td>R3</td>
-<td>Consistency</td>
-</tr>
-<tr>
-<td>R4</td>
-<td>The transferred probe</td>
-</tr>
-<tr>
-<td>R5</td>
-<td>Probe and consistency must agree (an ablation)</td>
-</tr>
-</tbody>
-</table>
-<p>Everything runs on a Kaggle T4. In total there are 61 evaluation runs: the base model plus 5 recipes, 4 languages and 3 seeds. Differences are tested with a paired bootstrap over the test questions.</p>
+<div class="links">
+<a href="https://github.com/Eman2123/tinyaya-idk">Code</a>
+<a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79">Adapters</a>
+<a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-data-6af954af02014765d70ba236">Data and outputs</a>
+<a href="https://eman2123.github.io/tinyaya-idk/">Results explorer</a>
+</div>
+
+<div class="tldr"><b class="ui">The short version</b><ul>
+<li>A small multilingual model (tiny-aya-global) answers every question it is asked and gets 80 to 85 percent of them wrong on our test set.</li>
+<li>We taught it to say "I don't know" using known/unknown labels that need <b>no gold answers in the target language</b>.</li>
+<li>That cut wrong answers to 19 to 26 percent in English, Spanish, Arabic and Malay, and matched training with gold labels in three of the four languages.</li>
+<li>The price is real: the tuned model refuses many questions it could have answered.</li>
+</ul></div>
+
+<h2>A model that never says "I don't know"</h2>
+<p>Ask a small language model something it has no way of knowing, and it will usually answer anyway, confidently. We measured how often. On 252 held-out questions per language from MKQA, CohereLabs/tiny-aya-global answered every question and was wrong on 80 to 85 percent of all of them, in English, Spanish, Arabic and Malay.</p>
+<p>The obvious fix is to fine-tune the model to abstain when it does not know. The hard part is the labels. To train abstention, you first need to know which questions the model does not know. Normally that means checking its answers against gold answers, and most languages do not have those.</p>
+<p>So the question we asked is this: can we get those known/unknown labels without gold answers in the target language, and still end up with a model that abstains about as well as one trained on gold labels?</p>
+
+<h2>Two ways to guess what the model knows</h2>
+<p>We tried two gold-free labels.</p>
+<p><b>Consistency.</b> Sample five answers to the same question. If at least four agree, we call the question known. If the model keeps changing its mind, we call it unknown.</p>
+<p><b>A hidden-state probe.</b> We train a small logistic regression on a middle layer of the model (layer -12), using English questions where we do have gold answers. Then we apply that probe, unchanged, to Spanish, Arabic and Malay. English is the only language that ever sees a gold label.</p>
+<p>Known questions keep their answer as the training target. Unknown questions get "I don't know" in the question's own language. We then fine-tune one small LoRA adapter (r=16) per language and compare five recipes:</p>
+<table class="left"><thead><tr><th>Recipe</th><th>Where the known/unknown labels come from</th></tr></thead><tbody>
+<tr><td>R1</td><td>Trap questions written by a teacher model</td></tr>
+<tr><td>R2</td><td>Gold answers (our upper bound)</td></tr>
+<tr><td>R3</td><td>Consistency</td></tr>
+<tr><td>R4</td><td>The transferred probe</td></tr>
+<tr><td>R5</td><td>Probe and consistency must agree (an ablation)</td></tr>
+</tbody></table>
+<p>Everything ran on a Kaggle T4. In total that is 61 evaluation runs: the base model, five recipes, four languages and three seeds. We compare recipes with a paired bootstrap over the test questions.</p>
+
+<h2>What happened to the 252 questions</h2>
+<div class="legend"><span><i style="background:var(--c)"></i>Answered correctly</span><span><i style="background:var(--w)"></i>Answered wrongly</span><span><i style="background:var(--a)"></i>Said "I don't know"</span></div>
+<figure><svg viewBox="0 0 720 282" role="img" aria-label="For each language, the base model and R4 split the 252 test questions into correct, wrong and abstained"><text x="0" y="40" class="lb">English</text><rect x="90.0" y="10" width="119.3" height="22" rx="3" class="c"/><rect x="210.8" y="10" width="487.7" height="22" rx="3" class="w"/><rect x="700.0" y="10" width="0.0" height="22" rx="3" class="a"/><text x="82" y="26" text-anchor="end" class="sm">Base</text><rect x="90.0" y="36" width="93.0" height="22" rx="3" class="c"/><rect x="184.6" y="36" width="116.2" height="22" rx="3" class="w"/><rect x="302.3" y="36" width="396.2" height="22" rx="3" class="a"/><text x="82" y="52" text-anchor="end" class="sm">R4</text><text x="0" y="108" class="lb">Spanish</text><rect x="90.0" y="78" width="105.2" height="22" rx="3" class="c"/><rect x="196.8" y="78" width="501.8" height="22" rx="3" class="w"/><rect x="700.0" y="78" width="0.0" height="22" rx="3" class="a"/><text x="82" y="94" text-anchor="end" class="sm">Base</text><rect x="90.0" y="104" width="70.5" height="22" rx="3" class="c"/><rect x="162.0" y="104" width="113.8" height="22" rx="3" class="w"/><rect x="277.3" y="104" width="421.2" height="22" rx="3" class="a"/><text x="82" y="120" text-anchor="end" class="sm">R4</text><text x="0" y="176" class="lb">Arabic</text><rect x="90.0" y="146" width="88.2" height="22" rx="3" class="c"/><rect x="179.7" y="146" width="518.8" height="22" rx="3" class="w"/><rect x="700.0" y="146" width="0.0" height="22" rx="3" class="a"/><text x="82" y="162" text-anchor="end" class="sm">Base</text><rect x="90.0" y="172" width="47.9" height="22" rx="3" class="c"/><rect x="139.4" y="172" width="133.9" height="22" rx="3" class="w"/><rect x="274.8" y="172" width="423.7" height="22" rx="3" class="a"/><text x="82" y="188" text-anchor="end" class="sm">R4</text><text x="0" y="244" class="lb">Malay</text><rect x="90.0" y="214" width="93.0" height="22" rx="3" class="c"/><rect x="184.6" y="214" width="513.9" height="22" rx="3" class="w"/><rect x="700.0" y="214" width="0.0" height="22" rx="3" class="a"/><text x="82" y="230" text-anchor="end" class="sm">Base</text><rect x="90.0" y="240" width="68.0" height="22" rx="3" class="c"/><rect x="159.5" y="240" width="158.3" height="22" rx="3" class="w"/><rect x="319.4" y="240" width="379.1" height="22" rx="3" class="a"/><text x="82" y="256" text-anchor="end" class="sm">R4</text></svg>
+<figcaption>Each bar is all 252 test questions. R4 is the adapter trained on probe labels. Rates are means over three training seeds; the base model is one deterministic run.</figcaption></figure>
+<p>The red shrinks a lot and mostly turns into grey. Look at English: the base model answers everything and is wrong on 80.2 percent of questions. R4 is wrong on 19.3 percent, answers 34.8 percent of questions, and says "I don't know" on the rest.</p>
+<p>It is not free. The green shrinks too, from 19.8 percent correct to 15.5 percent. The model is giving up some right answers to avoid many wrong ones.</p>
+<table><thead><tr><th>Wrong answers (lower is better)</th><th>Base</th><th>R1</th><th>R2 gold</th><th>R3</th><th>R4 probe</th><th>R5</th></tr></thead><tbody>
+<tr><td>English</td><td>0.802</td><td>0.713</td><td>0.192</td><td>0.245</td><td>0.193</td><td>0.192</td></tr>
+<tr><td>Spanish</td><td>0.825</td><td>0.712</td><td>0.212</td><td>0.196</td><td>0.189</td><td>0.167</td></tr>
+<tr><td>Arabic</td><td>0.853</td><td>0.541</td><td>0.262</td><td>0.239</td><td>0.222</td><td>0.233</td></tr>
+<tr><td>Malay</td><td>0.845</td><td>0.754</td><td>0.259</td><td>0.311</td><td>0.262</td><td>0.180</td></tr>
+</tbody></table>
+<p class="meta" style="margin-bottom:22px">Share of all questions answered and wrong. Means over 3 seeds.</p>
+
 <h2>What we found</h2>
-<p>Hallucination here means "answered and wrong", counted over all questions. Lower is better. Values are means over 3 seeds.</p>
-<table>
-<thead>
-<tr>
-<th>Language</th>
-<th>Base</th>
-<th>R1 teacher traps</th>
-<th>R2 gold</th>
-<th>R3 consistency</th>
-<th>R4 probe</th>
-<th>R5 probe and consistency</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>English</td>
-<td>0.802</td>
-<td>0.713</td>
-<td>0.192</td>
-<td>0.245</td>
-<td>0.193</td>
-<td>0.192</td>
-</tr>
-<tr>
-<td>Spanish</td>
-<td>0.825</td>
-<td>0.712</td>
-<td>0.212</td>
-<td>0.196</td>
-<td>0.189</td>
-<td>0.167</td>
-</tr>
-<tr>
-<td>Arabic</td>
-<td>0.853</td>
-<td>0.541</td>
-<td>0.262</td>
-<td>0.239</td>
-<td>0.222</td>
-<td>0.233</td>
-</tr>
-<tr>
-<td>Malay</td>
-<td>0.845</td>
-<td>0.754</td>
-<td>0.259</td>
-<td>0.311</td>
-<td>0.262</td>
-<td>0.180</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Gold-free labels work.</strong> R4 cuts hallucination from 0.80 to 0.85 down to 0.19 to 0.26. In English, Spanish and Malay it is not significantly different from training on gold labels (R2). The paired bootstrap interval for the difference includes zero.</p>
-<p><strong>Arabic is the exception.</strong> R4 hallucinates 0.040 less than R2, but it also gets 0.021 fewer answers right, because it abstains more. That is a more conservative model, not a better one.</p>
-<p><strong>Teacher-written traps barely help.</strong> R1 only moves hallucination from about 0.8 to about 0.7 in English, Spanish and Malay. One possible reason is that the questions a teacher model writes as traps are not the ones this small model actually gets wrong; we did not test that.</p>
-<p><strong>The probe labels are at least as good as consistency.</strong> AUROC for separating known from unknown questions is 0.84 to 0.90 for the probe and 0.74 to 0.81 for consistency. The confidence intervals overlap, so we claim "comparable or better", not "clearly better".</p>
-<p><strong>The cost is over-refusal.</strong> Among questions the base model answered correctly, R4 refuses 19 to 38 percent (across R2 to R5 the range is 19 to 49 percent).</p>
-<p><strong>Transfer across languages is partial.</strong> An adapter trained on English also helps on Spanish and Malay (roughly 0.35 less hallucination than the base model) but much less on Arabic. Adapters trained on one non-English language transfer poorly to the others. This matrix is from one seed.</p>
-<h2>Using the Lexsi tools</h2>
-<p>We used two Lexsi toolkits and skipped a third because of a dependency clash.</p>
-<ul>
-<li><strong>CuratorKIT</strong> processed all 20 training sets (5 recipes by 4 languages). Each got a manifest, provenance, checksums and a dataset card. It rejected no examples.</li>
-<li><strong>AuditKIT</strong> re-ran the evaluation through its own scorers. On R4 Spanish seed 1 it reported correct 0.119, refused 0.694 and hallucinated 0.1865, which matches our own evaluation script.</li>
-<li><strong>AlignTune</strong> did not install alongside our transformers and trl versions, so we did not use it.</li>
-</ul>
+<p><b>Gold-free labels work.</b> R4 matches gold-label training (R2) in English, Spanish and Malay. In each of those the bootstrap interval for the difference includes zero, so we cannot tell them apart.</p>
+<p><b>Arabic is the exception.</b> R4 is wrong 0.040 less often than R2, but it also gets 0.021 fewer answers right, because it abstains more. That is a more cautious model, not a better one.</p>
+<p><b>Teacher-written traps barely help.</b> R1 only moves wrong answers from about 0.8 to about 0.7 in English, Spanish and Malay. One possible reason is that the questions a teacher writes as traps are not the ones this small model actually gets wrong. We did not test that.</p>
+<p><b>The probe is at least as good as consistency.</b> To separate known from unknown questions, the probe reaches AUROC 0.84 to 0.90 and consistency 0.74 to 0.81. The intervals overlap, so we say "comparable or better", not "clearly better".</p>
+<p><b>Combining both can help.</b> R5, which keeps only questions where the probe and consistency agree, is wrong less often than R4 in Spanish and Malay. It refuses more as well.</p>
+
+<h2>The cost: refusing too much</h2>
+<p>Take the questions the base model answered correctly. R4 refuses between 19 and 38 percent of them depending on the language (19 to 49 percent across R2 to R5). If you care about being useful, that is the number to watch, and it is the main thing we would improve next.</p>
+
+<h2>Does it carry over to another language?</h2>
+<p>Only partly. An adapter trained on English also helps on Spanish and Malay, roughly 0.35 less hallucination than the base model, but much less on Arabic. Adapters trained on one non-English language transfer poorly to the others. This comes from a single seed, so treat it as a hint.</p>
+
+<h2>The Lexsi tools</h2>
+<p>We used two of them. <b>CuratorKIT</b> processed all 20 training sets (five recipes by four languages) and produced a manifest, provenance, checksums and a dataset card for each. It rejected no examples. <b>AuditKIT</b> re-ran our evaluation through its own scorers; on R4 Spanish, seed 1, it reported correct 0.119, refused 0.694 and hallucinated 0.1865, matching our own script. AlignTune did not install next to our transformers and trl versions, so we left it out.</p>
+
 <h2>What went wrong along the way</h2>
-<p>Our first set of evaluations was wrong. The fine-tuned adapters did not stop generating at the end-of-sequence token, so they kept writing after the answer and exact match failed. For a while Arabic and Malay looked worse than the base model. It was purely an evaluation bug. We fixed generation to stop at EOS and re-ran every evaluation except the base model.</p>
-<p>We also lost about five hours when a Kaggle session reset wiped the working directory. After that, every finished run uploaded its adapter and results to the Hub as it completed.</p>
-<h2>Limits you should know about</h2>
+<p>Our first evaluations were wrong. The tuned adapters did not stop generating at the end-of-sequence token, so they kept writing after the answer and exact match failed. For a while Arabic and Malay looked worse than the base model, and it was purely an evaluation bug. We fixed generation to stop at EOS and re-ran every evaluation except the base model.</p>
+<p>We also lost about five hours of work when a Kaggle session reset wiped the working directory. After that, every finished run uploaded its adapter and results to the Hub straight away.</p>
+
+<h2>What these numbers do not show</h2>
 <ul>
-<li>One QA source (MKQA, translated questions) and small training sets (238 to 382 examples).</li>
-<li>The probe is trained on English gold labels, so the method is gold-free only in the target languages.</li>
-<li>Refusal templates and few-shot prompts for Spanish, Arabic and Malay were not checked by a native speaker.</li>
-<li>The safety sanity check uses only 8 English prompts. It found no actionable harmful answers, but it is not a safety evaluation.</li>
-<li>The cross-language transfer matrix is one seed, and the published adapters are seed 1 only (raw outputs for all seeds are in the data collection).</li>
+<li>One QA source (MKQA, translated questions) and small training sets of 238 to 382 examples.</li>
+<li>The probe trains on English gold labels, so the method is gold-free only in the target languages.</li>
+<li>The refusal templates and few-shot prompts for Spanish, Arabic and Malay were not checked by a native speaker.</li>
+<li>Our safety check uses 8 English prompts and found no actionable harmful answers. It is a sanity check, not a safety evaluation.</li>
+<li>The transfer matrix is one seed. The published adapters are seed 1 only; the raw outputs for all seeds are in the data collection.</li>
 <li>The adapters inherit the non-commercial licence of the base model (CC BY-NC 4.0). The data follows MKQA (CC BY-SA 3.0).</li>
 </ul>
+
 <h2>Try it</h2>
-<pre><code class="language-python">from transformers import AutoTokenizer, AutoModelForCausalLM
+<pre><code>from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 
-tok = AutoTokenizer.from_pretrained(&quot;CohereLabs/tiny-aya-global&quot;)
+tok = AutoTokenizer.from_pretrained("CohereLabs/tiny-aya-global")
 base = AutoModelForCausalLM.from_pretrained(
-    &quot;CohereLabs/tiny-aya-global&quot;, torch_dtype=&quot;float16&quot;, device_map=&quot;auto&quot;)
+    "CohereLabs/tiny-aya-global", torch_dtype="float16", device_map="auto")
 model = PeftModel.from_pretrained(
-    base, &quot;EmanMirza2025/tinyaya-idk-adapters&quot;, subfolder=&quot;R4_es_s1&quot;)
-</code></pre>
-<p>Adapter folders are named <code>R{recipe}_{language}_s{seed}</code>. Use the few-shot prompt from <code>configs/config.yaml</code> in the GitHub repository, since the reported numbers were measured with it. The repository also has a small Gradio demo (<code>src/app.py</code>) that shows the base model and an adapter side by side, and full reproduction steps in the README.</p>
+    base, "EmanMirza2025/tinyaya-idk-adapters", subfolder="R4_es_s1")</code></pre>
+<p>Adapter folders are named <code>R{recipe}_{language}_s{seed}</code>. Use the few-shot prompt from <code>configs/config.yaml</code> in the GitHub repository, because the reported numbers were measured with it. The repository also has a small Gradio demo (<code>src/app.py</code>) that shows the base model and an adapter side by side, and full reproduction steps in the README.</p>
+
 <h2>Where everything is</h2>
 <ul>
-<li>Code and write-up: https://github.com/Eman2123/tinyaya-idk</li>
-<li>Adapters (public collection): https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79</li>
-<li>Data, logs and outputs (public collection): https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-data-6af954af02014765d70ba236</li>
-<li>Results explorer: https://eman2123.github.io/tinyaya-idk/</li>
+<li><a href="https://github.com/Eman2123/tinyaya-idk">Code and write-up on GitHub</a></li>
+<li><a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79">Adapters (public collection)</a></li>
+<li><a href="https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-data-6af954af02014765d70ba236">Data, logs and outputs (public collection)</a></li>
+<li><a href="https://eman2123.github.io/tinyaya-idk/">Results explorer</a></li>
 </ul>
-<p>Built by Eman Mirza for the Lexsi AI Safety and Alignment Hackathon.</p>
-</main></body></html>
+<hr>
+<footer>Built by Eman Mirza for the Lexsi AI Safety and Alignment Hackathon, Track 1 (Fine-tuning and Data Curation). Base model: CohereLabs/tiny-aya-global. A teacher model (Claude Haiku) was used only to write the R1 trap questions.</footer>
+</div></body></html>
