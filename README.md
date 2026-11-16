@@ -12,6 +12,7 @@ Lexsi AI Safety and Alignment Hackathon, Track 1 (Fine-tuning and Data Curation)
 [![Code licence](https://img.shields.io/badge/code-MIT-green)](LICENSE)
 [![Toolkits](https://img.shields.io/badge/Lexsi-CuratorKIT%20%2B%20AuditKIT-purple)](#4-lexsi-toolkits-used)
 [![Results explorer](https://img.shields.io/badge/results-explorer-teal)](https://eman2123.github.io/tinyaya-idk/)
+[![Article](https://img.shields.io/badge/HF-article-red)](https://huggingface.co/spaces/EmanMirza2025/tinyaya-idk-article)
 [![HF collections](https://img.shields.io/badge/HF-collections-yellow)](https://huggingface.co/collections/EmanMirza2025/tinyaya-idk-adapters-6af953c006eee63526de7c79)
 
 </div>
